@@ -124,13 +124,31 @@ export function createInitialState(
 
 // ─── Hamle ────────────────────────────────────────────────────────────────────
 
+// Sadece dice roll + phase moving — çözümleme animasyon bitince
+export function startMove(state: GameState, dice: [number, number]): GameState {
+  const s = deepClone(state);
+  const player = s.players[s.currentPlayerIndex];
+  const steps = dice[0] + dice[1];
+  const oldPos = player.position;
+  const newPos = (oldPos + steps) % BOARD_SIZE;
+
+  if (newPos < oldPos || (oldPos + steps) >= BOARD_SIZE) {
+    player.money += START_BONUS;
+    s.log.push(`${player.name} Başlangıç'ı geçti, +${START_BONUS}₺ 🏁`);
+  }
+
+  player.position = newPos;
+  s.lastDiceRoll = dice;
+  s.phase = "moving"; // UI animasyon için bekler
+  return s;
+}
+
 export function movePlayer(state: GameState, steps: number): GameState {
   const s = deepClone(state);
   const player = s.players[s.currentPlayerIndex];
   const oldPos = player.position;
   const newPos = (oldPos + steps) % BOARD_SIZE;
 
-  // Başlangıç karesi geçildi mi?
   if (newPos < oldPos || (oldPos + steps) >= BOARD_SIZE) {
     player.money += START_BONUS;
     s.log.push(`${player.name} Başlangıç'ı geçti, +${START_BONUS}₺ 🏁`);
@@ -143,6 +161,17 @@ export function movePlayer(state: GameState, steps: number): GameState {
   s.log.push(`${player.name} → ${square.name}`);
 
   return s;
+}
+
+// Animasyon bittikten sonra çağrılır
+export function finishMove(state: GameState): GameState {
+  const s = deepClone(state);
+  const player = s.players[s.currentPlayerIndex];
+  const square = getSquare(player.position);
+  s.pendingSquare = square;
+  s.phase = "action";
+  s.log.push(`${player.name} → ${square.name}`);
+  return resolveSquare(s);
 }
 
 // ─── Kare Eylemi ──────────────────────────────────────────────────────────────

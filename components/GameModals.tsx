@@ -155,19 +155,31 @@ function Modal({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
       position: "fixed", inset: 0,
-      background: "#000000aa", backdropFilter: "blur(4px)",
+      background: "#000000bb", backdropFilter: "blur(6px)",
       display: "flex", alignItems: "flex-end", justifyContent: "center",
-      zIndex: 50, padding: "0 16px 24px",
+      zIndex: 50, padding: "0 12px 20px",
+      animation: "fadeIn 0.15s ease",
     }}>
       <div style={{
-        background: "#16213e", borderRadius: 16,
-        padding: "24px 20px", width: "100%", maxWidth: 400,
-        border: "1px solid #2a3a5c",
+        background: "linear-gradient(160deg, #1a2d4a, #16213e)",
+        borderRadius: 20,
+        padding: "24px 20px",
+        width: "100%", maxWidth: 420,
+        border: "1px solid #2a3d5c",
+        boxShadow: "0 -4px 40px #00000066",
         display: "flex", flexDirection: "column", alignItems: "center",
         textAlign: "center",
+        animation: "slideUp 0.25s cubic-bezier(0.34,1.56,0.64,1)",
       }}>
         {children}
       </div>
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp {
+          from { transform: translateY(60px); opacity: 0; }
+          to   { transform: translateY(0);   opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }

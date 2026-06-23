@@ -2,7 +2,7 @@
 import { useState, useCallback } from "react";
 import { GameState, GameMode, ChefId, GameCard } from "./types";
 import {
-  createInitialState, rollDice, movePlayer, resolveSquare,
+  createInitialState, rollDice, startMove, finishMove,
   buyProperty, skipBuy, payRent, startDuel, resolveDuel,
   upgradeStar, applyCardEffect, endTurnIfNeeded,
 } from "./game-engine";
@@ -30,13 +30,23 @@ export function useGameState() {
     setState(createInitialState(mode, configs));
   }, []);
 
-  const handleRoll = useCallback(() => {
+  // Zar at → phase: "moving" (UI animasyon yönetir)
+  const handleRoll = useCallback((): [number, number] | null => {
+    let result: [number, number] | null = null;
     setState((prev) => {
       if (!prev || prev.phase !== "rolling") return prev;
       const dice = rollDice();
-      const steps = dice[0] + dice[1];
-      const moved = movePlayer({ ...prev, lastDiceRoll: dice }, steps);
-      return resolveSquare(moved);
+      result = dice;
+      return startMove(prev, dice);
+    });
+    return result;
+  }, []);
+
+  // Animasyon bitti → kareyi çöz
+  const handleFinishMove = useCallback(() => {
+    setState((prev) => {
+      if (!prev || prev.phase !== "moving") return prev;
+      return finishMove(prev);
     });
   }, []);
 
@@ -105,6 +115,7 @@ export function useGameState() {
     state,
     startGame,
     handleRoll,
+    handleFinishMove,
     handleBuy,
     handleSkipBuy,
     handlePayRent,

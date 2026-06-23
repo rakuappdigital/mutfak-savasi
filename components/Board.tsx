@@ -1,187 +1,242 @@
 "use client";
+import { useEffect, useRef, useState } from "react";
 import { GameState } from "@/lib/types";
 import { BOARD, GROUP_COLORS } from "@/lib/board-data";
 
 interface Props {
   state: GameState;
+  animPos: number[]; // her oyuncu için animasyon pozisyonu
+  highlightSquare: number | null; // hareket sırasında parlayan kare
 }
 
-const BOARD_SIZE = BOARD.length; // 62
-const SIDE = Math.ceil(BOARD_SIZE / 4); // ~16 per side
+const N = BOARD.length; // 62
+const SQ = 42; // kare boyutu px
+const GAP = 2;
 
-export default function Board({ state }: Props) {
+// 62 kareyi 4 kenara böl
+function getLayout() {
+  // Saat yönü: üst sol→sağ, sağ yukarı→aşağı, alt sağ→sol, sol aşağı→yukarı
+  const perSide = Math.ceil(N / 4);
+  const top: number[] = [];
+  const right: number[] = [];
+  const bottom: number[] = [];
+  const left: number[] = [];
+
+  for (let i = 0; i < N; i++) {
+    const side = Math.floor((i * 4) / N);
+    if (side === 0) top.push(i);
+    else if (side === 1) right.push(i);
+    else if (side === 2) bottom.push(i);
+    else left.push(i);
+  }
+  return { top, right, bottom: [...bottom].reverse(), left: [...left].reverse() };
+}
+
+const LAYOUT = getLayout();
+
+export default function Board({ state, animPos, highlightSquare }: Props) {
   const { players, properties, seasonMenu } = state;
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const getSquareStyle = (id: number) => {
+  // Highlight kareyi otomatik scroll ile görünür yap
+  useEffect(() => {
+    if (highlightSquare !== null && scrollRef.current) {
+      const el = scrollRef.current.querySelector(`[data-sq="${highlightSquare}"]`);
+      el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  }, [highlightSquare]);
+
+  const renderSquare = (id: number) => {
     const sq = BOARD[id];
     const prop = properties.find((p) => p.squareId === id);
-    const isSeasonActive = seasonMenu.active && seasonMenu.squareIds.includes(id);
+    const owner = prop ? players.find((p) => p.id === prop.ownerId) : null;
+    const isHighlight = highlightSquare === id;
+    const isSeason = seasonMenu.active && seasonMenu.squareIds.includes(id);
 
-    let bg = "#16213e";
-    let border = "1px solid #2a3a5c";
+    const groupColor = sq.group ? GROUP_COLORS[sq.group] : null;
 
-    if (sq.group && GROUP_COLORS[sq.group]) {
-      bg = GROUP_COLORS[sq.group] + "22";
-      border = `1px solid ${GROUP_COLORS[sq.group]}55`;
-    }
-    if (prop) {
-      const owner = players.find((p) => p.id === prop.ownerId);
-      if (owner) border = `2px solid ${owner.color}`;
-    }
-    if (prop?.isClosed) bg = "#300";
-    if (isSeasonActive) bg = "#2d1b00";
-
-    return { background: bg, border };
-  };
-
-  const getPlayersOnSquare = (id: number) => {
-    return players.filter((p) => p.position === id && !p.isBankrupt);
-  };
-
-  const renderSquare = (id: number, size: "sm" | "md" = "sm") => {
-    const sq = BOARD[id];
-    const prop = properties.find((p) => p.squareId === id);
-    const playersHere = getPlayersOnSquare(id);
-    const isSeasonActive = seasonMenu.active && seasonMenu.squareIds.includes(id);
-    const s = getSquareStyle(id);
-    const dim = size === "md" ? 52 : 38;
+    // Oyuncular bu karedeyse (animasyon pozisyonu)
+    const playersHere = players.filter((p, i) => animPos[i] === id && !p.isBankrupt);
 
     return (
       <div
         key={id}
+        data-sq={id}
         style={{
-          width: dim, height: dim,
-          ...s,
-          borderRadius: 4,
+          width: SQ, height: SQ,
+          borderRadius: 6,
+          background: isHighlight
+            ? "#fff3"
+            : prop?.isClosed
+              ? "#2a0000"
+              : isSeason
+                ? "#2a1a00"
+                : groupColor
+                  ? groupColor + "18"
+                  : "#16213e",
+          border: isHighlight
+            ? `2px solid #fff`
+            : owner
+              ? `2px solid ${owner.color}`
+              : groupColor
+                ? `1px solid ${groupColor}44`
+                : "1px solid #1e2d45",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
           position: "relative",
-          fontSize: size === "md" ? 14 : 11,
           flexShrink: 0,
+          transition: "background 0.15s, border 0.15s",
+          boxShadow: isHighlight ? `0 0 12px #ffffff88` : "none",
         }}
       >
+        {/* Grup renk şeridi — üst */}
+        {groupColor && (
+          <div style={{
+            position: "absolute", top: 0, left: 0, right: 0, height: 3,
+            background: groupColor, borderRadius: "6px 6px 0 0",
+          }} />
+        )}
+
         {/* Emoji */}
-        <span style={{ lineHeight: 1 }}>{sq.emoji}</span>
+        <span style={{ fontSize: 14, lineHeight: 1, marginTop: groupColor ? 2 : 0 }}>
+          {sq.emoji}
+        </span>
 
         {/* Yıldızlar */}
         {prop && prop.stars > 0 && (
-          <span style={{ fontSize: 8, lineHeight: 1, color: "#f5a623" }}>
-            {"⭐".repeat(prop.stars)}
-          </span>
+          <div style={{ fontSize: 7, color: "#f5a623", lineHeight: 1 }}>
+            {"★".repeat(prop.stars)}
+          </div>
         )}
 
         {/* Kapalı */}
         {prop?.isClosed && (
-          <span style={{ position: "absolute", top: 1, right: 1, fontSize: 8 }}>🔒</span>
+          <div style={{
+            position: "absolute", inset: 0, background: "#ff000022",
+            borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 14,
+          }}>🔒</div>
         )}
 
         {/* Mevsim */}
-        {isSeasonActive && (
-          <span style={{ position: "absolute", top: 1, left: 1, fontSize: 7 }}>🍂</span>
+        {isSeason && !prop?.isClosed && (
+          <div style={{ position: "absolute", top: 1, right: 1, fontSize: 8 }}>🍂</div>
         )}
 
-        {/* Oyuncular */}
+        {/* Oyuncu taşları */}
         {playersHere.length > 0 && (
           <div style={{
-            position: "absolute", bottom: 1, left: 0, right: 0,
+            position: "absolute",
+            bottom: 2, left: 0, right: 0,
             display: "flex", justifyContent: "center", gap: 1, flexWrap: "wrap",
           }}>
             {playersHere.map((p) => (
               <div
                 key={p.id}
+                title={p.name}
                 style={{
-                  width: 10, height: 10, borderRadius: "50%",
-                  background: p.color, border: "1px solid white",
-                  fontSize: 7, display: "flex", alignItems: "center", justifyContent: "center",
+                  width: 11, height: 11, borderRadius: "50%",
+                  background: p.color,
+                  border: "1.5px solid white",
+                  boxShadow: `0 0 4px ${p.color}`,
+                  fontSize: 7,
+                  display: "flex", alignItems: "center", justifyContent: "center",
                 }}
-              />
+              >
+              </div>
             ))}
           </div>
-        )}
-
-        {/* Sahip rengi çizgisi */}
-        {prop && (
-          <div style={{
-            position: "absolute", bottom: 0, left: 0, right: 0, height: 3,
-            background: players.find((p) => p.id === prop.ownerId)?.color ?? "transparent",
-            borderRadius: "0 0 4px 4px",
-          }} />
         )}
       </div>
     );
   };
 
-  // 4 kenarlı klasik board düzeni (küçük ekran için compact)
-  // Top row: 0..15 (sol→sağ)
-  // Right col: 16..30 (yukarı→aşağı)
-  // Bottom row: 31..46 (sağ→sol)
-  // Left col: 47..61 (aşağı→yukarı)
-
-  const topRow = Array.from({ length: 16 }, (_, i) => i); // 0-15
-  const rightCol = Array.from({ length: 16 }, (_, i) => i + 16); // 16-31
-  const bottomRow = Array.from({ length: 16 }, (_, i) => 47 - i); // 47..32 → reversed 32-47
-  const leftCol = Array.from({ length: 15 }, (_, i) => 61 - i); // 61..47 → reversed
+  const { top, right, bottom, left } = LAYOUT;
+  const sideLen = top.length;
+  const boardW = (sideLen + 2) * (SQ + GAP);
 
   return (
-    <div style={{
-      background: "#0d1b2a",
-      borderRadius: 12,
-      padding: 6,
-      border: "2px solid #2a3a5c",
+    <div ref={scrollRef} style={{
       display: "inline-flex",
       flexDirection: "column",
-      gap: 2,
-      alignSelf: "center",
+      gap: GAP,
+      background: "#0a1628",
+      borderRadius: 14,
+      padding: 6,
+      border: "2px solid #1e3a5f",
+      boxShadow: "0 8px 32px #00000088",
+      flexShrink: 0,
     }}>
-      {/* Top row */}
-      <div style={{ display: "flex", gap: 2 }}>
-        <div style={{ width: 52 }} /> {/* corner spacer */}
-        {topRow.map((id) => renderSquare(id))}
-        <div style={{ width: 52 }} /> {/* corner spacer */}
+      {/* Üst sıra */}
+      <div style={{ display: "flex", gap: GAP }}>
+        <CornerSquare id={left[0]} renderFn={renderSquare} />
+        {top.map((id) => renderSquare(id))}
+        <CornerSquare id={right[0]} renderFn={renderSquare} />
       </div>
 
-      {/* Middle: left col + center info + right col */}
-      <div style={{ display: "flex", gap: 2, alignItems: "stretch" }}>
-        {/* Left col — rendered bottom-up */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          {leftCol.map((id) => renderSquare(id))}
+      {/* Orta */}
+      <div style={{ display: "flex", gap: GAP }}>
+        {/* Sol sütun (ters) */}
+        <div style={{ display: "flex", flexDirection: "column", gap: GAP }}>
+          {[...left].slice(1).map((id) => renderSquare(id))}
         </div>
 
-        {/* Center */}
+        {/* Merkez */}
         <div style={{
-          flex: 1, background: "#0a1628", borderRadius: 8,
+          flex: 1,
+          background: "linear-gradient(135deg, #0d1f38, #0a1628)",
+          borderRadius: 10,
           display: "flex", flexDirection: "column",
           alignItems: "center", justifyContent: "center",
-          minWidth: 80, padding: 8, gap: 4,
+          minWidth: 70,
+          gap: 6, padding: 6,
+          border: "1px solid #1e3a5f",
         }}>
-          <div style={{ fontSize: 28 }}>🍽️</div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#eaeaea", textAlign: "center" }}>
-            Mutfak<br />Savaşları
+          <div style={{ fontSize: 30 }}>🍽️</div>
+          <div style={{
+            fontSize: 10, fontWeight: 800, color: "#eaeaea",
+            textAlign: "center", letterSpacing: 0.5,
+          }}>
+            MUTFAK<br />SAVAŞLARI
           </div>
-          {state.seasonMenu.active && (
-            <div style={{ fontSize: 10, color: "#f5a623", textAlign: "center" }}>
-              🍂 Mevsim<br />Menüsü Aktif
+          {seasonMenu.active && (
+            <div style={{
+              fontSize: 9, color: "#f5a623", textAlign: "center",
+              background: "#f5a62322", borderRadius: 4, padding: "2px 6px",
+            }}>
+              🍂 Mevsim Aktif
             </div>
           )}
-          <div style={{ fontSize: 10, color: "#8892a4" }}>
+          <div style={{
+            fontSize: 10, color: "#8892a4",
+            background: "#16213e", borderRadius: 4, padding: "2px 8px",
+          }}>
             Tur {state.turn}
           </div>
         </div>
 
-        {/* Right col */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          {rightCol.map((id) => renderSquare(id))}
+        {/* Sağ sütun */}
+        <div style={{ display: "flex", flexDirection: "column", gap: GAP }}>
+          {[...right].slice(1).map((id) => renderSquare(id))}
         </div>
       </div>
 
-      {/* Bottom row */}
-      <div style={{ display: "flex", gap: 2 }}>
-        <div style={{ width: 52 }} />
-        {bottomRow.map((id) => renderSquare(id))}
-        <div style={{ width: 52 }} />
+      {/* Alt sıra */}
+      <div style={{ display: "flex", gap: GAP }}>
+        <CornerSquare id={bottom[bottom.length - 1] ?? 0} renderFn={renderSquare} />
+        {[...bottom].slice(0, -1).map((id) => renderSquare(id))}
+        <CornerSquare id={right[right.length - 1] ?? 0} renderFn={renderSquare} />
       </div>
+    </div>
+  );
+}
+
+function CornerSquare({ id, renderFn }: { id: number; renderFn: (id: number) => React.ReactNode }) {
+  return (
+    <div style={{ width: SQ, height: SQ, flexShrink: 0 }}>
+      {renderFn(id)}
     </div>
   );
 }
