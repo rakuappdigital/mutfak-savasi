@@ -45,9 +45,8 @@ export default function MenuScreen({ onStart }: Props) {
         padding: 24,
       }}>
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 56, marginBottom: 8 }}>🍽️</div>
-          <h1 style={{ fontSize: 32, fontWeight: 800, color: "#eaeaea", margin: 0 }}>Mutfak Savaşları</h1>
-          <p style={{ color: "#8892a4", marginTop: 8, fontSize: 14 }}>Şeflerin Düellosu</p>
+          <Image src="/assets/ui/logo.png" alt="Mutfak Savaşları" width={280} height={140} style={{ objectFit: "contain" }} />
+          <p style={{ color: "#8892a4", marginTop: 4, fontSize: 13 }}>Şeflerin Düellosu</p>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%", maxWidth: 320 }}>
@@ -57,28 +56,36 @@ export default function MenuScreen({ onStart }: Props) {
             className="btn"
             onClick={() => { setMode("classic"); setStep("players"); }}
             style={{
-              background: mode === "classic" ? "#e94560" : "#16213e",
-              color: "white", padding: "18px 20px", fontSize: 16,
-              border: "2px solid #e94560", borderRadius: 12,
-              display: "flex", flexDirection: "column", gap: 4,
+              background: mode === "classic" ? "#1e0a12" : "#16213e",
+              color: "white", padding: "14px 20px", fontSize: 15,
+              border: `2px solid ${mode === "classic" ? "#e94560" : "#2a3a5c"}`, borderRadius: 14,
+              display: "flex", alignItems: "center", gap: 14,
+              boxShadow: mode === "classic" ? "0 0 20px #e9456044" : "none",
             }}
           >
-            <span style={{ fontWeight: 700 }}>⚔️ Klasik Mod</span>
-            <span style={{ fontSize: 12, opacity: 0.8, fontWeight: 400 }}>Son ayakta kalan kazanır</span>
+            <Image src="/assets/ui/klasik-mod.png" alt="Klasik" width={44} height={44} style={{ objectFit: "contain", flexShrink: 0 }} />
+            <div style={{ textAlign: "left" }}>
+              <div style={{ fontWeight: 700 }}>Klasik Mod</div>
+              <div style={{ fontSize: 11, opacity: 0.7, fontWeight: 400, marginTop: 2 }}>Son ayakta kalan kazanır</div>
+            </div>
           </button>
 
           <button
             className="btn"
             onClick={() => { setMode("quick"); setStep("players"); }}
             style={{
-              background: mode === "quick" ? "#f5a623" : "#16213e",
-              color: "white", padding: "18px 20px", fontSize: 16,
-              border: "2px solid #f5a623", borderRadius: 12,
-              display: "flex", flexDirection: "column", gap: 4,
+              background: mode === "quick" ? "#1a1200" : "#16213e",
+              color: "white", padding: "14px 20px", fontSize: 15,
+              border: `2px solid ${mode === "quick" ? "#f5a623" : "#2a3a5c"}`, borderRadius: 14,
+              display: "flex", alignItems: "center", gap: 14,
+              boxShadow: mode === "quick" ? "0 0 20px #f5a62344" : "none",
             }}
           >
-            <span style={{ fontWeight: 700 }}>⚡ Hızlı Mod</span>
-            <span style={{ fontSize: 12, opacity: 0.8, fontWeight: 400 }}>20 tur, en zengin kazanır</span>
+            <Image src="/assets/ui/hizli-mod.png" alt="Hızlı" width={44} height={44} style={{ objectFit: "contain", flexShrink: 0 }} />
+            <div style={{ textAlign: "left" }}>
+              <div style={{ fontWeight: 700 }}>Hızlı Mod</div>
+              <div style={{ fontSize: 11, opacity: 0.7, fontWeight: 400, marginTop: 2 }}>20 tur, en zengin kazanır</div>
+            </div>
           </button>
         </div>
       </div>
@@ -93,10 +100,13 @@ export default function MenuScreen({ onStart }: Props) {
       padding: 24, overflowY: "auto",
     }}>
       <div style={{ textAlign: "center", paddingTop: 16 }}>
-        <h2 style={{ fontSize: 22, fontWeight: 700, color: "#eaeaea", margin: 0 }}>Oyuncu Ayarları</h2>
-        <p style={{ color: "#8892a4", fontSize: 12, marginTop: 4 }}>
-          {mode === "quick" ? "⚡ Hızlı Mod" : "⚔️ Klasik Mod"}
-        </p>
+        <Image src="/assets/ui/logo.png" alt="Mutfak Savaşları" width={160} height={80} style={{ objectFit: "contain" }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: -4 }}>
+          <Image src={mode === "quick" ? "/assets/ui/hizli-mod.png" : "/assets/ui/klasik-mod.png"} alt={mode} width={18} height={18} style={{ objectFit: "contain" }} />
+          <p style={{ color: "#8892a4", fontSize: 12, margin: 0 }}>
+            {mode === "quick" ? "Hızlı Mod" : "Klasik Mod"}
+          </p>
+        </div>
       </div>
 
       {/* Oyuncu sayısı */}

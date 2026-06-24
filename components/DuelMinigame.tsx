@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, useCallback } from "react";
+import Image from "next/image";
 import { DuelState, Player } from "@/lib/types";
 
 interface Props {
@@ -8,207 +9,180 @@ interface Props {
   onResult: (challengerScore: number, defenderScore: number) => void;
 }
 
-const FLAME_COUNT = 8;
-
 export default function DuelMinigame({ duel, players, onResult }: Props) {
   const challenger = players.find((p) => p.id === duel.challengerId)!;
-  const defender = players.find((p) => p.id === duel.defenderId)!;
+  const defender   = players.find((p) => p.id === duel.defenderId)!;
 
   const [timeLeft, setTimeLeft] = useState(duel.timeLimit);
   const [challengerScore, setChallengerScore] = useState(0);
-  const [defenderScore, setDefenderScore] = useState(0);
+  const [defenderScore,   setDefenderScore]   = useState(0);
   const [flames, setFlames] = useState<{ id: number; side: "challenger" | "defender"; x: number; y: number; active: boolean }[]>([]);
   const [finished, setFinished] = useState(false);
 
-  const cScore = useRef(0);
-  const dScore = useRef(0);
-  const nextId = useRef(0);
+  const cScore  = useRef(0);
+  const dScore  = useRef(0);
+  const nextId  = useRef(0);
 
   const spawnFlame = useCallback((side: "challenger" | "defender") => {
     const id = nextId.current++;
-    const x = Math.random() * 70 + 15;
-    const y = Math.random() * 60 + 20;
-    setFlames((prev) => [...prev.slice(-20), { id, side, x, y, active: true }]);
+    const x  = Math.random() * 65 + 10;
+    const y  = Math.random() * 55 + 15;
+    setFlames((prev) => [...prev.slice(-24), { id, side, x, y, active: true }]);
     setTimeout(() => {
       setFlames((prev) => prev.map((f) => f.id === id ? { ...f, active: false } : f));
     }, 900);
   }, []);
 
-  // Spawn flames
   useEffect(() => {
     if (finished) return;
-    const interval = setInterval(() => {
+    const iv = setInterval(() => {
       spawnFlame(Math.random() > 0.5 ? "challenger" : "defender");
-    }, 400);
-    return () => clearInterval(interval);
+    }, 380);
+    return () => clearInterval(iv);
   }, [finished, spawnFlame]);
 
-  // Timer
   useEffect(() => {
     if (finished) return;
-    const interval = setInterval(() => {
+    const iv = setInterval(() => {
       setTimeLeft((t) => {
-        if (t <= 1) {
-          setFinished(true);
-          clearInterval(interval);
-          return 0;
-        }
+        if (t <= 1) { setFinished(true); return 0; }
         return t - 1;
       });
     }, 1000);
-    return () => clearInterval(interval);
+    return () => clearInterval(iv);
   }, [finished]);
 
   useEffect(() => {
-    if (finished) {
-      setTimeout(() => onResult(cScore.current, dScore.current), 1200);
-    }
+    if (finished) setTimeout(() => onResult(cScore.current, dScore.current), 1400);
   }, [finished, onResult]);
 
   const tapFlame = (id: number, side: "challenger" | "defender") => {
     if (finished) return;
     setFlames((prev) => prev.map((f) => f.id === id ? { ...f, active: false } : f));
-    if (side === "challenger") {
-      cScore.current += 1;
-      setChallengerScore((s) => s + 1);
-    } else {
-      dScore.current += 1;
-      setDefenderScore((s) => s + 1);
-    }
+    if (side === "challenger") { cScore.current++; setChallengerScore((s) => s + 1); }
+    else                       { dScore.current++;  setDefenderScore((s)   => s + 1); }
   };
 
+  const cWon = cScore.current > dScore.current;
+  const dWon = dScore.current > cScore.current;
+
   return (
-    <div style={{
-      position: "fixed", inset: 0, background: "#0a0a0a",
-      display: "flex", flexDirection: "column",
-      zIndex: 100,
-    }}>
+    <div style={{ position: "fixed", inset: 0, background: "#08111c", display: "flex", flexDirection: "column", zIndex: 100 }}>
+
       {/* Header */}
       <div style={{
-        padding: "12px 16px", background: "#1a1a2e",
+        padding: "10px 14px", background: "#111d2e",
         display: "flex", justifyContent: "space-between", alignItems: "center",
-        borderBottom: "1px solid #2a3a5c",
+        borderBottom: "1px solid #1e3a5f",
       }}>
-        <div style={{ color: challenger.color, fontWeight: 700, fontSize: 14 }}>
-          {challenger.emoji} {challenger.name}
-          <span style={{ color: "#f5a623", marginLeft: 8 }}>{challengerScore}</span>
+        {/* Challenger */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ width: 36, height: 36, borderRadius: "50%", overflow: "hidden", border: `2px solid ${challenger.color}`, background: "#0f1923" }}>
+            <Image src={`/assets/chefs/${challenger.chefId}-portre.png`} alt={challenger.name} width={36} height={36} style={{ objectFit: "cover", width: "100%", height: "100%" }} />
+          </div>
+          <div>
+            <div style={{ color: challenger.color, fontWeight: 700, fontSize: 13 }}>{challenger.name}</div>
+            <div style={{ color: "#f5a623", fontWeight: 800, fontSize: 18, lineHeight: 1 }}>{challengerScore}</div>
+          </div>
         </div>
+
+        {/* Timer */}
         <div style={{
-          background: timeLeft <= 2 ? "#e94560" : "#0f3460",
-          borderRadius: 20, padding: "4px 16px", fontWeight: 700, fontSize: 18,
-          color: "white", transition: "background 0.3s",
+          background: finished ? "#1a1a1a" : timeLeft <= 2 ? "#e94560" : "#0f3460",
+          borderRadius: 24, padding: "6px 18px",
+          fontWeight: 800, fontSize: 20, color: "white",
+          transition: "background 0.3s",
+          boxShadow: timeLeft <= 2 && !finished ? "0 0 16px #e9456088" : "none",
         }}>
-          {finished ? "🏁" : `${timeLeft}s`}
+          {finished
+            ? <Image src="/assets/ui/duel-bitis.png" alt="Bitti" width={80} height={32} style={{ objectFit: "contain", display: "block" }} />
+            : `${timeLeft}s`}
         </div>
-        <div style={{ color: defender.color, fontWeight: 700, fontSize: 14, textAlign: "right" }}>
-          <span style={{ color: "#f5a623", marginRight: 8 }}>{defenderScore}</span>
-          {defender.name} {defender.emoji}
+
+        {/* Defender */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexDirection: "row-reverse" }}>
+          <div style={{ width: 36, height: 36, borderRadius: "50%", overflow: "hidden", border: `2px solid ${defender.color}`, background: "#0f1923" }}>
+            <Image src={`/assets/chefs/${defender.chefId}-portre.png`} alt={defender.name} width={36} height={36} style={{ objectFit: "cover", width: "100%", height: "100%" }} />
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ color: defender.color, fontWeight: 700, fontSize: 13 }}>{defender.name}</div>
+            <div style={{ color: "#f5a623", fontWeight: 800, fontSize: 18, lineHeight: 1 }}>{defenderScore}</div>
+          </div>
         </div>
       </div>
 
-      {/* Ateş Dansı alanı — yarı yarıya */}
+      {/* Alan */}
       <div style={{ display: "flex", flex: 1 }}>
-        {/* Sol: Challenger */}
-        <div style={{
-          flex: 1, position: "relative",
-          background: finished && cScore.current > dScore.current ? "#1a0d0d" : "#0d0d1a",
-          borderRight: "2px solid #2a3a5c",
-        }}>
-          {!finished && <div style={{
-            position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)",
-            color: challenger.color + "33", fontSize: 48, fontWeight: 800, pointerEvents: "none",
-            userSelect: "none",
-          }}>{challenger.emoji}</div>}
+        {/* Challenger tarafı */}
+        <div style={{ flex: 1, position: "relative", background: finished && cWon ? "#1a0800" : "#0d0d1a", borderRight: "2px solid #1e3a5f" }}>
+          {/* Büyük portre arkaplan */}
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.08, pointerEvents: "none" }}>
+            <Image src={`/assets/chefs/${challenger.chefId}-portre.png`} alt="" fill style={{ objectFit: "cover" }} />
+          </div>
 
-          {flames
-            .filter((f) => f.side === "challenger" && f.active)
-            .map((f) => (
-              <button
-                key={f.id}
-                onClick={() => tapFlame(f.id, "challenger")}
-                style={{
-                  position: "absolute",
-                  left: `${f.x}%`, top: `${f.y}%`,
-                  transform: "translate(-50%,-50%)",
-                  width: 48, height: 48, fontSize: 28,
-                  background: "none", border: "none", cursor: "pointer",
-                  animation: "pulse 0.9s ease-in-out",
-                }}
-              >
-                🔥
-              </button>
-            ))}
+          {flames.filter((f) => f.side === "challenger" && f.active).map((f) => (
+            <button key={f.id} onClick={() => tapFlame(f.id, "challenger")} style={{
+              position: "absolute", left: `${f.x}%`, top: `${f.y}%`,
+              transform: "translate(-50%,-50%)",
+              width: 56, height: 56,
+              background: "none", border: "none", cursor: "pointer", padding: 0,
+              animation: "flameIn 0.9s ease-in-out",
+            }}>
+              <Image src="/assets/ui/ates.png" alt="ateş" width={56} height={56} style={{ objectFit: "contain", width: "100%", height: "100%" }} />
+            </button>
+          ))}
 
           {finished && (
-            <div style={{
-              position: "absolute", inset: 0, display: "flex",
-              alignItems: "center", justifyContent: "center",
-              fontSize: 48,
-            }}>
-              {cScore.current > dScore.current ? "🏆" : "😢"}
+            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {cWon
+                ? <Image src="/assets/ui/kupa.png" alt="kazandı" width={100} height={100} style={{ objectFit: "contain" }} />
+                : <Image src="/assets/ui/iflas.png" alt="kaybetti" width={80} height={80} style={{ objectFit: "contain", opacity: 0.8 }} />}
             </div>
           )}
         </div>
 
-        {/* Sağ: Defender */}
-        <div style={{
-          flex: 1, position: "relative",
-          background: finished && dScore.current > cScore.current ? "#1a0d0d" : "#0d0d1a",
-        }}>
-          {!finished && <div style={{
-            position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)",
-            color: defender.color + "33", fontSize: 48, fontWeight: 800, pointerEvents: "none",
-            userSelect: "none",
-          }}>{defender.emoji}</div>}
+        {/* Defender tarafı */}
+        <div style={{ flex: 1, position: "relative", background: finished && dWon ? "#1a0800" : "#0d0d1a" }}>
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.08, pointerEvents: "none" }}>
+            <Image src={`/assets/chefs/${defender.chefId}-portre.png`} alt="" fill style={{ objectFit: "cover" }} />
+          </div>
 
-          {flames
-            .filter((f) => f.side === "defender" && f.active)
-            .map((f) => (
-              <button
-                key={f.id}
-                onClick={() => tapFlame(f.id, "defender")}
-                style={{
-                  position: "absolute",
-                  left: `${f.x}%`, top: `${f.y}%`,
-                  transform: "translate(-50%,-50%)",
-                  width: 48, height: 48, fontSize: 28,
-                  background: "none", border: "none", cursor: "pointer",
-                }}
-              >
-                🔥
-              </button>
-            ))}
+          {flames.filter((f) => f.side === "defender" && f.active).map((f) => (
+            <button key={f.id} onClick={() => tapFlame(f.id, "defender")} style={{
+              position: "absolute", left: `${f.x}%`, top: `${f.y}%`,
+              transform: "translate(-50%,-50%)",
+              width: 56, height: 56,
+              background: "none", border: "none", cursor: "pointer", padding: 0,
+              animation: "flameIn 0.9s ease-in-out",
+            }}>
+              <Image src="/assets/ui/ates.png" alt="ateş" width={56} height={56} style={{ objectFit: "contain", width: "100%", height: "100%" }} />
+            </button>
+          ))}
 
           {finished && (
-            <div style={{
-              position: "absolute", inset: 0, display: "flex",
-              alignItems: "center", justifyContent: "center",
-              fontSize: 48,
-            }}>
-              {dScore.current > cScore.current ? "🏆" : "😢"}
+            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {dWon
+                ? <Image src="/assets/ui/kupa.png" alt="kazandı" width={100} height={100} style={{ objectFit: "contain" }} />
+                : <Image src="/assets/ui/iflas.png" alt="kaybetti" width={80} height={80} style={{ objectFit: "contain", opacity: 0.8 }} />}
             </div>
           )}
         </div>
       </div>
 
       {/* Footer */}
-      <div style={{
-        padding: "10px 16px", background: "#1a1a2e", textAlign: "center",
-        color: "#8892a4", fontSize: 12,
-        borderTop: "1px solid #2a3a5c",
-      }}>
+      <div style={{ padding: "10px 16px", background: "#111d2e", textAlign: "center", color: "#8892a4", fontSize: 12, borderTop: "1px solid #1e3a5f" }}>
         {finished
           ? (cScore.current === dScore.current
-            ? "Beraberlik! Savunucu kazandı 🎯"
-            : `${cScore.current > dScore.current ? challenger.name : defender.name} kazandı!`)
-          : "Kendi tarafındaki ateşlere dokun! 🔥"}
+              ? "Beraberlik! Savunucu kazandı."
+              : `${cWon ? challenger.name : defender.name} kazandı!`)
+          : "Kendi tarafındaki aleve dokun!"}
       </div>
 
       <style>{`
-        @keyframes pulse {
-          0% { transform: translate(-50%,-50%) scale(0.5); opacity: 0; }
-          30% { transform: translate(-50%,-50%) scale(1.2); opacity: 1; }
-          100% { transform: translate(-50%,-50%) scale(1); opacity: 0.9; }
+        @keyframes flameIn {
+          0%   { transform: translate(-50%,-50%) scale(0.3); opacity: 0; }
+          40%  { transform: translate(-50%,-50%) scale(1.2); opacity: 1; }
+          100% { transform: translate(-50%,-50%) scale(1);   opacity: 0.85; }
         }
       `}</style>
     </div>

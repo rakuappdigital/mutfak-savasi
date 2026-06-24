@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, useCallback } from "react";
+import Image from "next/image";
 import { useGameState } from "@/lib/useGameState";
 import { BOARD_SIZE } from "@/lib/board-data";
 import MenuScreen from "@/components/MenuScreen";
@@ -95,13 +96,14 @@ export default function GamePage() {
         display: "flex", alignItems: "center", justifyContent: "space-between",
         flexShrink: 0,
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 18 }}>🍽️</span>
-          <span style={{ fontWeight: 700, fontSize: 14, color: "#eaeaea" }}>Mutfak Savaşları</span>
-        </div>
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <Image src="/assets/ui/logo.png" alt="Mutfak Savaşları" width={90} height={36} style={{ objectFit: "contain" }} />
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <Image
+            src={state.mode === "quick" ? "/assets/ui/hizli-mod.png" : "/assets/ui/klasik-mod.png"}
+            alt={state.mode} width={16} height={16} style={{ objectFit: "contain" }}
+          />
           <span style={{ color: "#8892a4", fontSize: 12 }}>
-            {state.mode === "quick" ? `⚡ ${state.turn}/${state.maxTurns}` : `Tur ${state.turn}`}
+            {state.mode === "quick" ? `${state.turn}/${state.maxTurns}` : `Tur ${state.turn}`}
           </span>
           <button
             onClick={resetGame}
@@ -139,8 +141,9 @@ export default function GamePage() {
               boxShadow: i === state.currentPlayerIndex ? `0 0 6px ${p.color}` : "none",
             }} />
             <span style={{ fontSize: 11, color: p.color, fontWeight: 600 }}>{p.name}</span>
-            <span style={{ fontSize: 11, color: "#8892a4" }}>{p.money}₺</span>
-            {p.isBankrupt && <span style={{ fontSize: 10 }}>💀</span>}
+            <Image src="/assets/ui/para-ikon.png" alt="₺" width={11} height={11} style={{ objectFit: "contain" }} />
+            <span style={{ fontSize: 11, color: "#8892a4" }}>{p.money}</span>
+            {p.isBankrupt && <Image src="/assets/ui/iflas.png" alt="iflas" width={14} height={14} style={{ objectFit: "contain" }} />}
           </div>
         ))}
       </div>
@@ -238,16 +241,17 @@ function WinScreen({ state, onReset }: { state: ReturnType<typeof useGameState>[
       background: "linear-gradient(135deg, #0d1520 0%, #16213e 60%, #1a2a4a 100%)",
       padding: 24,
     }}>
-      <div style={{
-        fontSize: 80,
-        animation: "bounce 0.6s ease-in-out infinite alternate",
-      }}>🏆</div>
+      <div style={{ animation: "bounce 0.6s ease-in-out infinite alternate" }}>
+        <Image src="/assets/ui/kupa.png" alt="Kupa" width={120} height={120} style={{ objectFit: "contain" }} />
+      </div>
       <div style={{ textAlign: "center" }}>
-        <div style={{ fontSize: 40 }}>{state.winner.emoji}</div>
-        <h1 style={{ fontSize: 28, fontWeight: 800, color: state.winner.color, margin: "8px 0 4px" }}>
+        <div style={{ width: 64, height: 64, borderRadius: "50%", overflow: "hidden", border: `3px solid ${state.winner.color}`, margin: "0 auto 8px", background: "#0f1923", boxShadow: `0 0 20px ${state.winner.color}66` }}>
+          <Image src={`/assets/chefs/${state.winner.chefId}-portre.png`} alt={state.winner.name} width={64} height={64} style={{ objectFit: "cover", width: "100%", height: "100%" }} />
+        </div>
+        <h1 style={{ fontSize: 26, fontWeight: 800, color: state.winner.color, margin: "0 0 4px" }}>
           {state.winner.name}
         </h1>
-        <p style={{ color: "#8892a4", margin: 0 }}>Kazandı!</p>
+        <p style={{ color: "#8892a4", margin: 0, fontSize: 13 }}>Kazandı!</p>
       </div>
 
       <div style={{
@@ -262,13 +266,18 @@ function WinScreen({ state, onReset }: { state: ReturnType<typeof useGameState>[
               alignItems: "center", padding: "6px 0",
               borderBottom: i < state.players.length - 1 ? "1px solid #1e3a5f" : "none",
             }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ color: "#8892a4", fontSize: 12, width: 16 }}>{i + 1}.</span>
-                <span style={{ fontSize: 16 }}>{p.emoji}</span>
-                <span style={{ color: p.color, fontWeight: 600, fontSize: 14 }}>{p.name}</span>
-                {p.isBankrupt && <span style={{ fontSize: 11 }}>💀</span>}
+                <div style={{ width: 28, height: 28, borderRadius: "50%", overflow: "hidden", border: `1.5px solid ${p.color}`, background: "#0f1923" }}>
+                  <Image src={`/assets/chefs/${p.chefId}-portre.png`} alt={p.name} width={28} height={28} style={{ objectFit: "cover", width: "100%", height: "100%" }} />
+                </div>
+                <span style={{ color: p.color, fontWeight: 600, fontSize: 13 }}>{p.name}</span>
+                {p.isBankrupt && <Image src="/assets/ui/iflas.png" alt="iflas" width={16} height={16} style={{ objectFit: "contain" }} />}
               </div>
-              <span style={{ color: "#f5a623", fontWeight: 700 }}>{p.money}₺</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <Image src="/assets/ui/para-ikon.png" alt="₺" width={14} height={14} style={{ objectFit: "contain" }} />
+                <span style={{ color: "#f5a623", fontWeight: 700, fontSize: 13 }}>{p.money}</span>
+              </div>
             </div>
           ))}
       </div>

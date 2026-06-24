@@ -20,6 +20,11 @@ function squareImage(type: SquareType, group?: string): string | null {
   if (group === "japon")   return "/assets/squares/japon.png";
   if (group === "turk")    return "/assets/squares/turk.png";
   if (group === "meksika") return "/assets/squares/meksika.png";
+  if (group === "domates") return "/assets/squares/domates.png";
+  if (group === "un")      return "/assets/squares/un.png";
+  if (group === "peynir")  return "/assets/squares/peynir.png";
+  if (group === "et")      return "/assets/squares/et.png";
+  if (group === "sebze")   return "/assets/squares/sebze.png";
   switch (type) {
     case "start":             return "/assets/squares/baslangic.png";
     case "rest":              return "/assets/squares/dinlenme.png";
@@ -129,16 +134,16 @@ export default function Board({ state, animPos, highlightSquare }: Props) {
             position: "absolute", inset: 0,
             background: "#00000099",
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 18,
-          }}>🔒</div>
+          }}>
+            <Image src="/assets/ui/kapali.png" alt="kapalı" width={28} height={28} style={{ objectFit: "contain" }} />
+          </div>
         )}
 
         {/* Mevsim overlay */}
         {isSeason && !prop?.isClosed && (
-          <div style={{
-            position: "absolute", top: 1, right: 2,
-            fontSize: 9, lineHeight: 1,
-          }}>🍂</div>
+          <div style={{ position: "absolute", top: 1, right: 1 }}>
+            <Image src="/assets/ui/mevsim-mini.png" alt="mevsim" width={14} height={14} style={{ objectFit: "contain" }} />
+          </div>
         )}
 
         {/* Yıldız göstergesi */}
@@ -233,20 +238,14 @@ export default function Board({ state, animPos, highlightSquare }: Props) {
           gap: 6, padding: 8,
           border: "1px solid #5a3a1a55",
         }}>
-          <div style={{ fontSize: 32 }}>🍽️</div>
-          <div style={{
-            fontSize: 10, fontWeight: 800, color: "#f0ede8",
-            textAlign: "center", letterSpacing: 1,
-            textShadow: "0 1px 4px #000",
-          }}>
-            MUTFAK<br />SAVAŞLARI
-          </div>
+          <Image src="/assets/ui/logo.png" alt="Mutfak Savaşları" width={90} height={45} style={{ objectFit: "contain" }} />
           {seasonMenu.active && (
             <div style={{
-              fontSize: 9, color: "#f5a623",
+              display: "flex", alignItems: "center", gap: 3,
               background: "#00000066", borderRadius: 4, padding: "2px 6px",
             }}>
-              🍂 Mevsim Aktif
+              <Image src="/assets/ui/mevsim-mini.png" alt="mevsim" width={12} height={12} style={{ objectFit: "contain" }} />
+              <span style={{ fontSize: 9, color: "#f5a623" }}>Mevsim Aktif</span>
             </div>
           )}
           <div style={{

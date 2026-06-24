@@ -29,25 +29,22 @@ export default function GameModals({
     const canAfford = player.money >= price;
     return (
       <Modal>
-        <div style={{ fontSize: 36, marginBottom: 8 }}>{sq.emoji}</div>
-        <h3 style={{ margin: 0, color: "#eaeaea", fontSize: 18 }}>{sq.name}</h3>
-        <p style={{ color: "#8892a4", fontSize: 12, margin: "6px 0 12px" }}>
-          {sq.group ? `Grup: ${sq.group}` : sq.type}
-        </p>
+        <SquareHeader sq={sq} />
         <div style={{ background: "#0f3460", borderRadius: 8, padding: "10px 16px", marginBottom: 16, width: "100%" }}>
           <Row label="Fiyat" value={`${price}₺`} />
           <Row label="Taban Kira" value={`${sq.baseRent ?? 0}₺`} />
           {sq.rentByStars && (
             <>
-              <Row label="⭐ Kira" value={`${sq.rentByStars[1]}₺`} />
-              <Row label="⭐⭐ Kira" value={`${sq.rentByStars[2]}₺`} />
-              <Row label="⭐⭐⭐ Kira" value={`${sq.rentByStars[3]}₺`} />
+              <StarRow stars={1} value={sq.rentByStars[1]} />
+              <StarRow stars={2} value={sq.rentByStars[2]} />
+              <StarRow stars={3} value={sq.rentByStars[3]} />
             </>
           )}
         </div>
-        <p style={{ color: "#f5a623", fontSize: 13, marginBottom: 12 }}>
-          💰 Bakiye: {player.money}₺
-        </p>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
+          <Image src="/assets/ui/para-ikon.png" alt="para" width={18} height={18} style={{ objectFit: "contain" }} />
+          <span style={{ color: "#f5a623", fontSize: 13 }}>Bakiye: {player.money}₺</span>
+        </div>
         <div style={{ display: "flex", gap: 10 }}>
           <button className="btn btn-secondary" onClick={onSkipBuy}>Geç</button>
           <button className="btn btn-primary" onClick={onBuy} disabled={!canAfford}
@@ -65,24 +62,26 @@ export default function GameModals({
     const rent = prop ? calculateRent(state, pendingSquare, prop) : 0;
     return (
       <Modal>
-        <div style={{ fontSize: 36, marginBottom: 8 }}>{pendingSquare.emoji}</div>
-        <h3 style={{ margin: 0, color: "#eaeaea", fontSize: 18 }}>{pendingSquare.name}</h3>
-        <p style={{ color: "#8892a4", fontSize: 12, margin: "6px 0 12px" }}>
-          Sahibi: <span style={{ color: owner?.color }}>{owner?.emoji} {owner?.name}</span>
-        </p>
+        <SquareHeader sq={pendingSquare} />
+        {owner && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <div style={{ width: 28, height: 28, borderRadius: "50%", overflow: "hidden", border: `2px solid ${owner.color}`, background: "#0f1923" }}>
+              <Image src={`/assets/chefs/${owner.chefId}-portre.png`} alt={owner.name} width={28} height={28} style={{ objectFit: "cover", width: "100%", height: "100%" }} />
+            </div>
+            <span style={{ color: owner.color, fontSize: 13, fontWeight: 600 }}>{owner.name}</span>
+          </div>
+        )}
         <div style={{ background: "#0f3460", borderRadius: 8, padding: "10px 16px", marginBottom: 16, width: "100%" }}>
           <Row label="Kira" value={`${rent}₺`} highlight />
           <Row label="Düello Süresi" value={`${duel.timeLimit}s`} />
-          <Row label="Düello Kazanırsan" value="Mülkü al!" />
+          <Row label="Kazanırsan" value="Mülkü al!" />
           <Row label="Kaybedersen" value={`${rent * 2}₺ öde`} />
         </div>
         <div style={{ display: "flex", gap: 10 }}>
-          <button className="btn btn-secondary" onClick={onPayRent}>
-            Kira Öde ({rent}₺)
-          </button>
-          <button className="btn" onClick={onStartDuel}
-            style={{ background: "#e94560", color: "white" }}>
-            ⚔️ Düello!
+          <button className="btn btn-secondary" onClick={onPayRent}>Kira Öde ({rent}₺)</button>
+          <button className="btn" onClick={onStartDuel} style={{ background: "#e94560", color: "white", display: "flex", alignItems: "center", gap: 8 }}>
+            <Image src="/assets/ui/klasik-mod.png" alt="düello" width={20} height={20} style={{ objectFit: "contain" }} />
+            Düello!
           </button>
         </div>
       </Modal>
@@ -97,17 +96,16 @@ export default function GameModals({
     const canAfford = player.money >= STAR_COST;
     return (
       <Modal>
-        <div style={{ fontSize: 36, marginBottom: 8 }}>{sq.emoji}</div>
-        <h3 style={{ margin: 0, color: "#eaeaea", fontSize: 18 }}>{sq.name}</h3>
+        <SquareHeader sq={sq} />
         <div style={{ display: "flex", gap: 4, margin: "8px 0", justifyContent: "center" }}>
           {currentStars === 0
             ? <span style={{ color: "#8892a4", fontSize: 12 }}>Yıldızsız</span>
-            : <Image src={`/assets/squares/yildiz${currentStars}.png`} alt={`${currentStars} yıldız`} width={48} height={48} style={{ objectFit: "contain" }} />
+            : <Image src={`/assets/squares/yildiz${currentStars}.png`} alt={`${currentStars} yıldız`} width={52} height={52} style={{ objectFit: "contain" }} />
           }
         </div>
         {currentStars < 3 && (
           <div style={{ background: "#0f3460", borderRadius: 8, padding: "10px 16px", marginBottom: 14, width: "100%" }}>
-            {sq.rentByStars && <Row label={`⭐ → ${currentStars + 1} Yıldız Kira`} value={`${sq.rentByStars[currentStars + 1]}₺`} highlight />}
+            {sq.rentByStars && <StarRow stars={currentStars + 1 as 1|2|3} value={sq.rentByStars[currentStars + 1]} highlight />}
             <Row label="Maliyet" value={`${STAR_COST}₺`} />
             {!canUpgrade && (
               <p style={{ color: "#e94560", fontSize: 11, marginTop: 6, marginBottom: 0 }}>
@@ -209,6 +207,52 @@ function Row({ label, value, highlight }: { label: string; value: string; highli
       <span style={{ color: highlight ? "#f5a623" : "#eaeaea", fontSize: 12, fontWeight: highlight ? 700 : 400 }}>
         {value}
       </span>
+    </div>
+  );
+}
+
+function StarRow({ stars, value, highlight }: { stars: 1|2|3; value: number; highlight?: boolean }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+        <Image src="/assets/ui/yildiz-mini.png" alt="yıldız" width={14} height={14} style={{ objectFit: "contain" }} />
+        <span style={{ color: "#8892a4", fontSize: 12 }}>{stars} Yıldız Kira</span>
+      </div>
+      <span style={{ color: highlight ? "#f5a623" : "#eaeaea", fontSize: 12, fontWeight: highlight ? 700 : 400 }}>
+        {value}₺
+      </span>
+    </div>
+  );
+}
+
+function SquareHeader({ sq }: { sq: Square }) {
+  const imgMap: Record<string, string> = {
+    italyan: "/assets/squares/italyan.png", japon: "/assets/squares/japon.png",
+    turk:    "/assets/squares/turk.png",    meksika: "/assets/squares/meksika.png",
+    domates: "/assets/squares/domates.png", un:      "/assets/squares/un.png",
+    peynir:  "/assets/squares/peynir.png",  et:      "/assets/squares/et.png",
+    sebze:   "/assets/squares/sebze.png",
+  };
+  const typeMap: Record<string, string> = {
+    start: "/assets/squares/baslangic.png", rest:              "/assets/squares/dinlenme.png",
+    tax:   "/assets/squares/vergi.png",     jail:              "/assets/squares/depo.png",
+    chance:"/assets/squares/sans.png",      fire:              "/assets/squares/yangin.png",
+    health_inspection: "/assets/squares/denetim.png",
+    season_menu: "/assets/squares/mevsim.png",
+    duel_square: "/assets/squares/duello.png",
+  };
+  const src = sq.group ? imgMap[sq.group] : typeMap[sq.type];
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14, width: "100%" }}>
+      {src && (
+        <div style={{ width: 56, height: 56, borderRadius: 10, overflow: "hidden", flexShrink: 0 }}>
+          <Image src={src} alt={sq.name} width={56} height={56} style={{ objectFit: "cover", width: "100%", height: "100%" }} />
+        </div>
+      )}
+      <div style={{ textAlign: "left" }}>
+        <h3 style={{ margin: 0, color: "#eaeaea", fontSize: 16, fontWeight: 700 }}>{sq.name}</h3>
+        {sq.group && <p style={{ color: "#8892a4", fontSize: 11, margin: "3px 0 0" }}>{sq.group} grubu</p>}
+      </div>
     </div>
   );
 }
