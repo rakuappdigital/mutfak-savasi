@@ -100,81 +100,92 @@ export default function MenuScreen({ onStart }: Props) {
 
   return (
     <div style={{
-      display: "flex", flexDirection: "column", alignItems: "center",
-      height: "100dvh", gap: 20,
-      background: "var(--bg)",
-      padding: 24, overflowY: "auto", position: "relative",
+      display: "flex", flexDirection: "column",
+      height: "100dvh", background: "var(--bg)",
+      position: "relative", overflow: "hidden",
     }}>
       <div className="atmo-bg" />
-      <div style={{ textAlign: "center", paddingTop: 16 }}>
-        <div className="ui-icon"><Image src="/assets/ui/logo.png" alt="Mutfak Savaşları" width={160} height={80} style={{ objectFit: "contain" }} /></div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2, justifyContent: "center" }}>
-          <div className="ui-icon"><Image src={mode === "quick" ? "/assets/ui/hizli-mod.png" : "/assets/ui/klasik-mod.png"} alt={mode} width={16} height={16} style={{ objectFit: "contain" }} /></div>
-          <p className="title-sm" style={{ color: "var(--muted)", margin: 0 }}>
-            {mode === "quick" ? "Hızlı Mod" : "Klasik Mod"}
-          </p>
+
+      {/* Sabit header */}
+      <div className="glass" style={{
+        padding: "10px 16px", flexShrink: 0,
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        position: "relative", zIndex: 1,
+      }}>
+        <button className="btn btn-secondary" onClick={() => setStep("mode")}
+          style={{ padding: "7px 14px", fontSize: 13 }}>← Geri</button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div className="ui-icon"><Image src={mode === "quick" ? "/assets/ui/hizli-mod.png" : "/assets/ui/klasik-mod.png"} alt={mode} width={18} height={18} style={{ objectFit: "contain" }} /></div>
+          <span className="title-sm" style={{ color: "var(--muted)" }}>{mode === "quick" ? "Hızlı Mod" : "Klasik Mod"}</span>
+        </div>
+        <div style={{ display: "flex", gap: 6 }}>
+          {[2, 3, 4].map((n) => (
+            <button key={n} onClick={() => setPlayerCount(n)}
+              style={{
+                width: 34, height: 34, borderRadius: 8, border: "none", cursor: "pointer",
+                background: playerCount === n ? "var(--accent)" : "rgba(255,255,255,0.07)",
+                color: "white", fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14,
+              }}>{n}</button>
+          ))}
         </div>
       </div>
 
-      {/* Oyuncu sayısı */}
-      <div style={{ display: "flex", gap: 8 }}>
-        {[2, 3, 4].map((n) => (
-          <button
-            key={n}
-            className="btn"
-            onClick={() => setPlayerCount(n)}
-            style={{
-              background: playerCount === n ? "#e94560" : "#16213e",
-              color: "white", width: 60, height: 44, fontSize: 16,
-              border: "2px solid #2a3a5c", borderRadius: 10,
-            }}
-          >
-            {n}
-          </button>
-        ))}
-        <span style={{ color: "#8892a4", fontSize: 13, alignSelf: "center", marginLeft: 8 }}>kişi</span>
-      </div>
-
-      {/* Oyuncu konfigürasyonları */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%", maxWidth: 360 }}>
+      {/* Oyuncu kartları — scroll */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10, position: "relative", zIndex: 1 }}>
         {Array.from({ length: playerCount }).map((_, i) => {
           const player = players[i];
           const chef = CHEFS.find((c) => c.id === player.chefId)!;
           return (
             <div key={i} style={{
-              background: "#16213e", borderRadius: 12, padding: 14,
-              border: `2px solid ${chef.color}40`,
+              background: `linear-gradient(135deg, rgba(13,24,40,0.9), rgba(9,18,32,0.95))`,
+              borderRadius: 14, padding: "12px 14px",
+              border: `1.5px solid ${chef.color}44`,
+              boxShadow: `0 2px 16px ${chef.color}11`,
             }}>
+              {/* Üst: portre + isim */}
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
                 <div style={{
-                  width: 44, height: 44, borderRadius: "50%",
+                  width: 48, height: 48, borderRadius: "50%",
                   overflow: "hidden", border: `2px solid ${chef.color}`,
                   flexShrink: 0, background: "#0f1923",
+                  boxShadow: `0 0 10px ${chef.color}44`,
                 }}>
-                  <Image
-                    src={`/assets/chefs/${chef.id}-portre.png`}
-                    alt={chef.name}
-                    width={44}
-                    height={44}
-                    style={{ objectFit: "cover", width: "100%", height: "100%" }}
-                  />
+                  <Image src={`/assets/chefs/${chef.id}-portre.png`} alt={chef.name}
+                    width={48} height={48} style={{ objectFit: "cover", width: "100%", height: "100%" }} />
                 </div>
-                <input
-                  value={player.name}
-                  onChange={(e) => updatePlayer(i, "name", e.target.value)}
-                  maxLength={12}
-                  style={{
-                    flex: 1, background: "#0f3460", border: "none", borderRadius: 8,
-                    padding: "8px 12px", color: "white", fontSize: 14, fontWeight: 600,
-                  }}
-                />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <input
+                    value={player.name}
+                    onChange={(e) => updatePlayer(i, "name", e.target.value)}
+                    maxLength={12}
+                    placeholder="İsim gir..."
+                    style={{
+                      width: "100%",
+                      background: "rgba(255,255,255,0.06)",
+                      border: `1px solid ${chef.color}33`,
+                      borderRadius: 8,
+                      padding: "8px 12px",
+                      color: "white",
+                      fontSize: 15,
+                      fontFamily: "var(--font-body)",
+                      fontWeight: 700,
+                      outline: "none",
+                    }}
+                  />
+                  <p style={{ color: "var(--muted)", fontSize: 10, margin: "4px 0 0", fontFamily: "var(--font-body)" }}>
+                    {chef.passiveDesc}
+                  </p>
+                </div>
               </div>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+
+              {/* Şef seçimi */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6 }}>
                 {CHEFS.map((c) => {
                   const taken = usedChefs.includes(c.id) && c.id !== player.chefId;
+                  const selected = player.chefId === c.id;
                   return (
-                    <button
-                      key={c.id}
+                    <button key={c.id}
                       onClick={() => {
                         if (!taken) {
                           updatePlayer(i, "chefId", c.id);
@@ -182,43 +193,40 @@ export default function MenuScreen({ onStart }: Props) {
                         }
                       }}
                       style={{
-                        padding: "5px 8px", borderRadius: 8, fontSize: 11,
-                        background: player.chefId === c.id ? c.color : "#0f3460",
-                        color: "white", border: "none", cursor: taken ? "not-allowed" : "pointer",
-                        opacity: taken ? 0.35 : 1, fontWeight: 600,
-                        display: "flex", alignItems: "center", gap: 5,
+                        padding: "6px 4px", borderRadius: 10, fontSize: 10,
+                        background: selected ? c.color + "33" : "rgba(255,255,255,0.04)",
+                        color: selected ? c.color : "var(--muted)",
+                        border: `1.5px solid ${selected ? c.color : "rgba(255,255,255,0.06)"}`,
+                        cursor: taken ? "not-allowed" : "pointer",
+                        opacity: taken ? 0.3 : 1,
+                        fontWeight: 700,
+                        fontFamily: "var(--font-body)",
+                        display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
                       }}
                     >
-                      <div style={{
-                        width: 20, height: 20, borderRadius: "50%",
-                        overflow: "hidden", flexShrink: 0, background: "#0f1923",
-                      }}>
-                        <Image src={`/assets/chefs/${c.id}-portre.png`} alt={c.name} width={20} height={20}
+                      <div style={{ width: 30, height: 30, borderRadius: "50%", overflow: "hidden", border: `1.5px solid ${c.color}66`, background: "#0f1923" }}>
+                        <Image src={`/assets/chefs/${c.id}-portre.png`} alt={c.name} width={30} height={30}
                           style={{ objectFit: "cover", width: "100%", height: "100%" }} />
                       </div>
-                      {c.name}
+                      <span style={{ fontSize: 10 }}>{c.name}</span>
                     </button>
                   );
                 })}
               </div>
-              <p style={{ color: "#8892a4", fontSize: 11, marginTop: 8, marginBottom: 0 }}>
-                🎯 {chef.passiveDesc}
-              </p>
             </div>
           );
         })}
       </div>
 
-      <div style={{ display: "flex", gap: 10, marginTop: 8, marginBottom: 24 }}>
-        <button className="btn btn-secondary" onClick={() => setStep("mode")}>
-          ← Geri
-        </button>
-        <button
-          className="btn btn-primary"
-          onClick={handleStart}
-          style={{ fontSize: 16, padding: "12px 32px" }}
-        >
-          Oyunu Başlat 🍳
+      {/* Sabit alt buton */}
+      <div className="glass" style={{
+        padding: "12px 16px", flexShrink: 0,
+        borderTop: "1px solid rgba(255,255,255,0.06)",
+        position: "relative", zIndex: 1,
+      }}>
+        <button className="btn btn-primary" onClick={handleStart}
+          style={{ width: "100%", fontSize: 17, height: 54 }}>
+          Oyunu Başlat
         </button>
       </div>
     </div>
