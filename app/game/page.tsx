@@ -267,10 +267,10 @@ function WinScreen({ state, onReset }: { state: ReturnType<typeof useGameState>[
         <div style={{ width: 64, height: 64, borderRadius: "50%", overflow: "hidden", border: `3px solid ${state.winner.color}`, margin: "0 auto 8px", background: "#0f1923", boxShadow: `0 0 20px ${state.winner.color}66` }}>
           <Image src={`/assets/chefs/${state.winner.chefId}-portre.png`} alt={state.winner.name} width={64} height={64} style={{ objectFit: "cover", width: "100%", height: "100%" }} />
         </div>
-        <h1 style={{ fontSize: 26, fontWeight: 800, color: state.winner.color, margin: "0 0 4px" }}>
+        <h1 className="title-xl" style={{ color: state.winner.color, margin: "0 0 4px", fontSize: 26 }}>
           {state.winner.name}
         </h1>
-        <p style={{ color: "#8892a4", margin: 0, fontSize: 13 }}>Kazandı!</p>
+        <p className="title-sm" style={{ color: "var(--muted)", margin: 0 }}>— Kazandı! —</p>
       </div>
 
       <div style={{
@@ -286,11 +286,11 @@ function WinScreen({ state, onReset }: { state: ReturnType<typeof useGameState>[
               borderBottom: i < state.players.length - 1 ? "1px solid #1e3a5f" : "none",
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ color: "#8892a4", fontSize: 12, width: 16 }}>{i + 1}.</span>
+                <span className="title-sm" style={{ color: "var(--muted)", width: 16 }}>{i + 1}.</span>
                 <div style={{ width: 28, height: 28, borderRadius: "50%", overflow: "hidden", border: `1.5px solid ${p.color}`, background: "#0f1923" }}>
                   <Image src={`/assets/chefs/${p.chefId}-portre.png`} alt={p.name} width={28} height={28} style={{ objectFit: "cover", width: "100%", height: "100%" }} />
                 </div>
-                <span style={{ color: p.color, fontWeight: 600, fontSize: 13 }}>{p.name}</span>
+                <span className="label" style={{ color: p.color }}>{p.name}</span>
                 {p.isBankrupt && <Image src="/assets/ui/iflas.png" alt="iflas" width={16} height={16} style={{ objectFit: "contain" }} />}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
@@ -301,15 +301,7 @@ function WinScreen({ state, onReset }: { state: ReturnType<typeof useGameState>[
           ))}
       </div>
 
-      <button
-        onClick={onReset}
-        style={{
-          padding: "14px 40px", borderRadius: 12, border: "none",
-          background: "linear-gradient(135deg, #e94560, #c0392b)",
-          color: "white", fontWeight: 700, fontSize: 16, cursor: "pointer",
-          boxShadow: "0 4px 20px #e9456055",
-        }}
-      >
+      <button className="btn btn-primary" onClick={onReset} style={{ padding: "14px 44px", fontSize: 16 }}>
         Ana Menü
       </button>
 

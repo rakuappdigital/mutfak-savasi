@@ -52,10 +52,10 @@ export default function DiceRoller({ onRoll, disabled, playerName, playerColor, 
         }}>
           {result && (
             <>
-              <span style={{ color: "#8892a4", fontSize: 10 }}>toplam</span>
+              <span style={{ fontFamily: "var(--font-body)", color: "var(--muted)", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.08em" }}>toplam</span>
               <span style={{
-                color: "#f5a623", fontWeight: 800, fontSize: 22,
-                textShadow: "0 0 12px #f5a62388",
+                fontFamily: "var(--font-display)", color: "#f5a623", fontWeight: 700, fontSize: 24,
+                textShadow: "0 0 16px #f5a62399",
               }}>
                 {result[0] + result[1]}
               </span>
@@ -68,22 +68,21 @@ export default function DiceRoller({ onRoll, disabled, playerName, playerColor, 
       <button
         onClick={handlePress}
         disabled={disabled || rolling}
+        className="btn"
         style={{
           width: "100%",
-          padding: "0",
-          height: 56,
-          borderRadius: 14,
-          border: "none",
+          height: 58,
           cursor: (disabled || rolling) ? "not-allowed" : "pointer",
           background: rolling
-            ? "#1e2d45"
-            : `linear-gradient(135deg, ${playerColor}dd, ${playerColor}88)`,
+            ? "linear-gradient(160deg,#1a2d4a,#0f2040)"
+            : `linear-gradient(160deg, ${playerColor}ee 0%, ${playerColor}bb 50%, ${playerColor}88 100%)`,
           color: "white",
-          fontWeight: 700,
           fontSize: 15,
-          opacity: disabled ? 0.5 : 1,
-          transition: "all 0.2s",
-          boxShadow: rolling ? "none" : `0 4px 24px ${playerColor}44`,
+          opacity: disabled ? 0.38 : 1,
+          transition: "transform 0.12s ease, box-shadow 0.12s ease, background 0.2s",
+          boxShadow: rolling
+            ? "none"
+            : `0 5px 24px ${playerColor}55, inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -2px 0 rgba(0,0,0,0.2)`,
           transform: rolling ? "scale(0.97)" : "scale(1)",
           display: "flex",
           alignItems: "center",

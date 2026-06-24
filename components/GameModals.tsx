@@ -38,7 +38,7 @@ export default function GameModals({
         <HeroImage src={imgSrc} alt={sq.name} accentColor={groupColor} />
         <div style={{ padding: "0 20px 20px", width: "100%" }}>
           <div style={{ marginBottom: 14 }}>
-            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#fff" }}>{sq.name}</h2>
+            <h2 className="title-lg" style={{ margin: 0, color: "#fff" }}>{sq.name}</h2>
             {sq.group && (
               <span style={{
                 display: "inline-block", marginTop: 4,
@@ -70,8 +70,8 @@ export default function GameModals({
 
           <div style={{ display: "flex", gap: 10 }}>
             <button className="btn btn-secondary" onClick={onSkipBuy} style={{ flex: 1 }}>Geç</button>
-            <button className="btn btn-primary" onClick={onBuy} disabled={!canAfford}
-              style={{ flex: 2, opacity: canAfford ? 1 : 0.4, fontSize: 15 }}>
+            <button className="btn btn-green" onClick={onBuy} disabled={!canAfford}
+              style={{ flex: 2, opacity: canAfford ? 1 : 0.38, fontSize: 15 }}>
               Satın Al — {price}₺
             </button>
           </div>
@@ -307,12 +307,11 @@ function StatBox({ label, value, accent, large, icon }: {
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 2 }}>
         {icon && <div className="ui-icon"><Image src={icon} alt="" width={11} height={11} style={{ objectFit: "contain" }} /></div>}
-        <span style={{ color: "var(--muted)", fontSize: 10, fontWeight: 500 }}>{label}</span>
+        <span className="title-sm" style={{ color: "var(--muted)", fontSize: 9 }}>{label}</span>
       </div>
-      <span style={{
+      <span className="mono-stat" style={{
         color: accent ?? "#e8edf5",
-        fontSize: large ? 17 : 14,
-        fontWeight: large ? 800 : 600,
+        fontSize: large ? 18 : 14,
       }}>{value}</span>
     </div>
   );
