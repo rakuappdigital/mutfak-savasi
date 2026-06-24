@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { GameState, Player, Square, GameCard } from "@/lib/types";
 import { getProperty, calculateRent, ownsFullGroup } from "@/lib/game-engine";
 import { BOARD, STAR_COST } from "@/lib/board-data";
@@ -98,9 +99,12 @@ export default function GameModals({
       <Modal>
         <div style={{ fontSize: 36, marginBottom: 8 }}>{sq.emoji}</div>
         <h3 style={{ margin: 0, color: "#eaeaea", fontSize: 18 }}>{sq.name}</h3>
-        <p style={{ color: "#f5a623", fontSize: 16, margin: "8px 0" }}>
-          {"⭐".repeat(currentStars) || "Yıldızsız"}
-        </p>
+        <div style={{ display: "flex", gap: 4, margin: "8px 0", justifyContent: "center" }}>
+          {currentStars === 0
+            ? <span style={{ color: "#8892a4", fontSize: 12 }}>Yıldızsız</span>
+            : <Image src={`/assets/squares/yildiz${currentStars}.png`} alt={`${currentStars} yıldız`} width={48} height={48} style={{ objectFit: "contain" }} />
+          }
+        </div>
         {currentStars < 3 && (
           <div style={{ background: "#0f3460", borderRadius: 8, padding: "10px 16px", marginBottom: 14, width: "100%" }}>
             {sq.rentByStars && <Row label={`⭐ → ${currentStars + 1} Yıldız Kira`} value={`${sq.rentByStars[currentStars + 1]}₺`} highlight />}
@@ -129,13 +133,27 @@ export default function GameModals({
   if (phase === "card_draw" && drawnCard) {
     return (
       <Modal>
-        <div style={{ fontSize: 42, marginBottom: 8 }}>🎲</div>
-        <div style={{
-          background: "#0f3460", borderRadius: 12, padding: "16px 20px",
-          marginBottom: 16, width: "100%", textAlign: "center",
-        }}>
-          <h3 style={{ margin: "0 0 8px", color: "#f5a623", fontSize: 16 }}>{drawnCard.title}</h3>
-          <p style={{ color: "#eaeaea", fontSize: 13, margin: 0 }}>{drawnCard.description}</p>
+        {/* Şans kartı görseli — metin üzerine overlay */}
+        <div style={{ position: "relative", width: 180, height: 252, marginBottom: 16 }}>
+          <Image
+            src="/assets/ui/sans-karti.png"
+            alt="Şans Kartı"
+            fill
+            style={{ objectFit: "cover", borderRadius: 10 }}
+          />
+          {/* Kartın beyaz metin alanına başlık + açıklama yaz */}
+          <div style={{
+            position: "absolute",
+            top: "54%", left: "8%", right: "8%",
+            textAlign: "center",
+          }}>
+            <p style={{ fontWeight: 700, fontSize: 12, color: "#1a1a2e", margin: "0 0 4px", lineHeight: 1.2 }}>
+              {drawnCard.title}
+            </p>
+            <p style={{ fontSize: 10, color: "#333", margin: 0, lineHeight: 1.3 }}>
+              {drawnCard.description}
+            </p>
+          </div>
         </div>
         <button className="btn btn-primary" onClick={() => onCardEffect(drawnCard)} style={{ width: "100%" }}>
           Tamam

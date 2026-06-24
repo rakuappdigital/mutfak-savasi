@@ -1,28 +1,41 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import Image from "next/image";
-import { GameState } from "@/lib/types";
+import { GameState, SquareType } from "@/lib/types";
 import { BOARD, GROUP_COLORS } from "@/lib/board-data";
 
 interface Props {
   state: GameState;
-  animPos: number[]; // her oyuncu için animasyon pozisyonu
-  highlightSquare: number | null; // hareket sırasında parlayan kare
+  animPos: number[];
+  highlightSquare: number | null;
 }
 
-const N = BOARD.length; // 62
-const SQ = 42; // kare boyutu px
+const N = BOARD.length;
+const SQ = 48;
 const GAP = 2;
 
-// 62 kareyi 4 kenara böl
-function getLayout() {
-  // Saat yönü: üst sol→sağ, sağ yukarı→aşağı, alt sağ→sol, sol aşağı→yukarı
-  const perSide = Math.ceil(N / 4);
-  const top: number[] = [];
-  const right: number[] = [];
-  const bottom: number[] = [];
-  const left: number[] = [];
+// Kare tipine/gruba göre görsel yolu
+function squareImage(type: SquareType, group?: string): string | null {
+  if (group === "italyan") return "/assets/squares/italyan.png";
+  if (group === "japon")   return "/assets/squares/japon.png";
+  if (group === "turk")    return "/assets/squares/turk.png";
+  if (group === "meksika") return "/assets/squares/meksika.png";
+  switch (type) {
+    case "start":             return "/assets/squares/baslangic.png";
+    case "rest":              return "/assets/squares/dinlenme.png";
+    case "tax":               return "/assets/squares/vergi.png";
+    case "jail":              return "/assets/squares/depo.png";
+    case "chance":            return "/assets/squares/sans.png";
+    case "fire":              return "/assets/squares/yangin.png";
+    case "health_inspection": return "/assets/squares/denetim.png";
+    case "season_menu":       return "/assets/squares/mevsim.png";
+    case "duel_square":       return "/assets/squares/duello.png";
+    default:                  return null;
+  }
+}
 
+function getLayout() {
+  const top: number[] = [], right: number[] = [], bottom: number[] = [], left: number[] = [];
   for (let i = 0; i < N; i++) {
     const side = Math.floor((i * 4) / N);
     if (side === 0) top.push(i);
@@ -39,7 +52,6 @@ export default function Board({ state, animPos, highlightSquare }: Props) {
   const { players, properties, seasonMenu } = state;
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Highlight kareyi otomatik scroll ile görünür yap
   useEffect(() => {
     if (highlightSquare !== null && scrollRef.current) {
       const el = scrollRef.current.querySelector(`[data-sq="${highlightSquare}"]`);
@@ -53,11 +65,9 @@ export default function Board({ state, animPos, highlightSquare }: Props) {
     const owner = prop ? players.find((p) => p.id === prop.ownerId) : null;
     const isHighlight = highlightSquare === id;
     const isSeason = seasonMenu.active && seasonMenu.squareIds.includes(id);
-
     const groupColor = sq.group ? GROUP_COLORS[sq.group] : null;
-
-    // Oyuncular bu karedeyse (animasyon pozisyonu)
-    const playersHere = players.filter((p, i) => animPos[i] === id && !p.isBankrupt);
+    const imgSrc = squareImage(sq.type, sq.group);
+    const playersHere = players.filter((_, i) => animPos[i] === id && !players[i].isBankrupt);
 
     return (
       <div
@@ -65,93 +75,117 @@ export default function Board({ state, animPos, highlightSquare }: Props) {
         data-sq={id}
         style={{
           width: SQ, height: SQ,
-          borderRadius: 6,
-          background: isHighlight
-            ? "#fff3"
-            : prop?.isClosed
-              ? "#2a0000"
-              : isSeason
-                ? "#2a1a00"
-                : groupColor
-                  ? groupColor + "18"
-                  : "#16213e",
+          borderRadius: 7,
+          position: "relative",
+          flexShrink: 0,
+          overflow: "hidden",
           border: isHighlight
-            ? `2px solid #fff`
+            ? "2px solid #ffffff"
             : owner
               ? `2px solid ${owner.color}`
               : groupColor
-                ? `1px solid ${groupColor}44`
+                ? `1px solid ${groupColor}55`
                 : "1px solid #1e2d45",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          position: "relative",
-          flexShrink: 0,
-          transition: "background 0.15s, border 0.15s",
-          boxShadow: isHighlight ? `0 0 12px #ffffff88` : "none",
+          boxShadow: isHighlight
+            ? "0 0 14px #ffffffaa"
+            : owner
+              ? `0 0 6px ${owner.color}66`
+              : "none",
+          background: "#0f1923",
+          transition: "box-shadow 0.15s, border 0.15s",
         }}
       >
-        {/* Grup renk şeridi — üst */}
-        {groupColor && (
+        {/* Görsel */}
+        {imgSrc ? (
+          <Image
+            src={imgSrc}
+            alt={sq.name}
+            fill
+            sizes={`${SQ}px`}
+            style={{ objectFit: "cover" }}
+          />
+        ) : (
+          /* Görsel yoksa (malzeme kareleri) → grup rengi + emoji */
           <div style={{
-            position: "absolute", top: 0, left: 0, right: 0, height: 3,
-            background: groupColor, borderRadius: "6px 6px 0 0",
-          }} />
-        )}
-
-        {/* Emoji */}
-        <span style={{ fontSize: 14, lineHeight: 1, marginTop: groupColor ? 2 : 0 }}>
-          {sq.emoji}
-        </span>
-
-        {/* Yıldızlar */}
-        {prop && prop.stars > 0 && (
-          <div style={{ fontSize: 7, color: "#f5a623", lineHeight: 1 }}>
-            {"★".repeat(prop.stars)}
+            width: "100%", height: "100%",
+            background: groupColor ? groupColor + "22" : "#16213e",
+            display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center",
+            gap: 1,
+          }}>
+            {groupColor && (
+              <div style={{
+                position: "absolute", top: 0, left: 0, right: 0, height: 4,
+                background: groupColor,
+              }} />
+            )}
+            <span style={{ fontSize: 16, lineHeight: 1 }}>{sq.emoji}</span>
           </div>
         )}
 
-        {/* Kapalı */}
+        {/* Kapalı overlay */}
         {prop?.isClosed && (
           <div style={{
-            position: "absolute", inset: 0, background: "#ff000022",
-            borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 14,
+            position: "absolute", inset: 0,
+            background: "#00000099",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 18,
           }}>🔒</div>
         )}
 
-        {/* Mevsim */}
+        {/* Mevsim overlay */}
         {isSeason && !prop?.isClosed && (
-          <div style={{ position: "absolute", top: 1, right: 1, fontSize: 8 }}>🍂</div>
+          <div style={{
+            position: "absolute", top: 1, right: 2,
+            fontSize: 9, lineHeight: 1,
+          }}>🍂</div>
         )}
 
-        {/* Oyuncu taşları — token görseli */}
+        {/* Yıldız göstergesi */}
+        {prop && prop.stars > 0 && (
+          <div style={{
+            position: "absolute", bottom: 1, left: 0, right: 0,
+            display: "flex", justifyContent: "center",
+          }}>
+            <Image
+              src={`/assets/squares/yildiz${prop.stars}.png`}
+              alt={`${prop.stars} yıldız`}
+              width={22}
+              height={22}
+              style={{ objectFit: "contain" }}
+            />
+          </div>
+        )}
+
+        {/* Sahip renk şeridi — alt */}
+        {owner && !prop?.isClosed && (
+          <div style={{
+            position: "absolute", bottom: 0, left: 0, right: 0, height: 3,
+            background: owner.color,
+          }} />
+        )}
+
+        {/* Oyuncu taşları */}
         {playersHere.length > 0 && (
           <div style={{
-            position: "absolute",
-            bottom: 1, left: 0, right: 0,
+            position: "absolute", top: 1, left: 0, right: 0,
             display: "flex", justifyContent: "center", gap: 1, flexWrap: "wrap",
           }}>
             {playersHere.map((p) => (
-              <div
-                key={p.id}
-                title={p.name}
-                style={{
-                  width: 18, height: 18, borderRadius: "50%",
-                  overflow: "hidden",
-                  border: `1.5px solid ${p.color}`,
-                  boxShadow: `0 0 6px ${p.color}cc`,
-                  background: "#0f1923",
-                  flexShrink: 0,
-                }}
-              >
+              <div key={p.id} style={{
+                width: 16, height: 16, borderRadius: "50%",
+                overflow: "hidden",
+                border: `1.5px solid ${p.color}`,
+                boxShadow: `0 0 5px ${p.color}`,
+                background: "#0f1923",
+                flexShrink: 0,
+              }}>
                 <Image
                   src={`/assets/chefs/${p.chefId}-token.png`}
                   alt={p.name}
-                  width={18}
-                  height={18}
-                  style={{ objectFit: "cover", width: "100%", height: "100%", display: "block" }}
+                  width={16}
+                  height={16}
+                  style={{ objectFit: "cover", width: "100%", height: "100%" }}
                 />
               </div>
             ))}
@@ -162,89 +196,82 @@ export default function Board({ state, animPos, highlightSquare }: Props) {
   };
 
   const { top, right, bottom, left } = LAYOUT;
-  const sideLen = top.length;
-  const boardW = (sideLen + 2) * (SQ + GAP);
 
   return (
     <div ref={scrollRef} style={{
       display: "inline-flex",
       flexDirection: "column",
       gap: GAP,
-      background: "#0a1628",
+      backgroundImage: "url('/assets/ui/tahta-dokusu.png')",
+      backgroundSize: "cover",
       borderRadius: 14,
-      padding: 6,
-      border: "2px solid #1e3a5f",
-      boxShadow: "0 8px 32px #00000088",
+      padding: 8,
+      border: "3px solid #5a3a1a",
+      boxShadow: "0 8px 40px #00000099, inset 0 0 30px #00000044",
       flexShrink: 0,
     }}>
       {/* Üst sıra */}
       <div style={{ display: "flex", gap: GAP }}>
-        <CornerSquare id={left[0]} renderFn={renderSquare} />
+        <Corner id={left[0] ?? 0} render={renderSquare} />
         {top.map((id) => renderSquare(id))}
-        <CornerSquare id={right[0]} renderFn={renderSquare} />
+        <Corner id={right[0] ?? 0} render={renderSquare} />
       </div>
 
       {/* Orta */}
       <div style={{ display: "flex", gap: GAP }}>
-        {/* Sol sütun (ters) */}
         <div style={{ display: "flex", flexDirection: "column", gap: GAP }}>
-          {[...left].slice(1).map((id) => renderSquare(id))}
+          {left.slice(1).map((id) => renderSquare(id))}
         </div>
 
         {/* Merkez */}
         <div style={{
-          flex: 1,
-          background: "linear-gradient(135deg, #0d1f38, #0a1628)",
+          flex: 1, minWidth: 80,
+          background: "#00000088",
           borderRadius: 10,
           display: "flex", flexDirection: "column",
           alignItems: "center", justifyContent: "center",
-          minWidth: 70,
-          gap: 6, padding: 6,
-          border: "1px solid #1e3a5f",
+          gap: 6, padding: 8,
+          border: "1px solid #5a3a1a55",
         }}>
-          <div style={{ fontSize: 30 }}>🍽️</div>
+          <div style={{ fontSize: 32 }}>🍽️</div>
           <div style={{
-            fontSize: 10, fontWeight: 800, color: "#eaeaea",
-            textAlign: "center", letterSpacing: 0.5,
+            fontSize: 10, fontWeight: 800, color: "#f0ede8",
+            textAlign: "center", letterSpacing: 1,
+            textShadow: "0 1px 4px #000",
           }}>
             MUTFAK<br />SAVAŞLARI
           </div>
           {seasonMenu.active && (
             <div style={{
-              fontSize: 9, color: "#f5a623", textAlign: "center",
-              background: "#f5a62322", borderRadius: 4, padding: "2px 6px",
+              fontSize: 9, color: "#f5a623",
+              background: "#00000066", borderRadius: 4, padding: "2px 6px",
             }}>
               🍂 Mevsim Aktif
             </div>
           )}
           <div style={{
-            fontSize: 10, color: "#8892a4",
-            background: "#16213e", borderRadius: 4, padding: "2px 8px",
+            fontSize: 10, color: "#c8a97a",
+            background: "#00000055", borderRadius: 4, padding: "2px 8px",
           }}>
             Tur {state.turn}
           </div>
         </div>
 
-        {/* Sağ sütun */}
         <div style={{ display: "flex", flexDirection: "column", gap: GAP }}>
-          {[...right].slice(1).map((id) => renderSquare(id))}
+          {right.slice(1).map((id) => renderSquare(id))}
         </div>
       </div>
 
       {/* Alt sıra */}
       <div style={{ display: "flex", gap: GAP }}>
-        <CornerSquare id={bottom[bottom.length - 1] ?? 0} renderFn={renderSquare} />
-        {[...bottom].slice(0, -1).map((id) => renderSquare(id))}
-        <CornerSquare id={right[right.length - 1] ?? 0} renderFn={renderSquare} />
+        <Corner id={bottom[bottom.length - 1] ?? 0} render={renderSquare} />
+        {bottom.slice(0, -1).map((id) => renderSquare(id))}
+        <Corner id={right[right.length - 1] ?? 0} render={renderSquare} />
       </div>
     </div>
   );
 }
 
-function CornerSquare({ id, renderFn }: { id: number; renderFn: (id: number) => React.ReactNode }) {
-  return (
-    <div style={{ width: SQ, height: SQ, flexShrink: 0 }}>
-      {renderFn(id)}
-    </div>
-  );
+function Corner({ id, render }: { id: number; render: (id: number) => React.ReactNode }) {
+  return <div style={{ width: SQ, height: SQ, flexShrink: 0 }}>{render(id)}</div>;
 }
