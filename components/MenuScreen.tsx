@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Image from "next/image";
 import { GameMode, ChefId } from "@/lib/types";
 import { CHEFS } from "@/lib/board-data";
 import { PlayerSetup } from "@/lib/useGameState";
@@ -92,7 +93,6 @@ export default function MenuScreen({ onStart }: Props) {
       padding: 24, overflowY: "auto",
     }}>
       <div style={{ textAlign: "center", paddingTop: 16 }}>
-        <div style={{ fontSize: 32, marginBottom: 4 }}>👨‍🍳</div>
         <h2 style={{ fontSize: 22, fontWeight: 700, color: "#eaeaea", margin: 0 }}>Oyuncu Ayarları</h2>
         <p style={{ color: "#8892a4", fontSize: 12, marginTop: 4 }}>
           {mode === "quick" ? "⚡ Hızlı Mod" : "⚔️ Klasik Mod"}
@@ -129,7 +129,19 @@ export default function MenuScreen({ onStart }: Props) {
               border: `2px solid ${chef.color}40`,
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                <span style={{ fontSize: 24 }}>{chef.emoji}</span>
+                <div style={{
+                  width: 44, height: 44, borderRadius: "50%",
+                  overflow: "hidden", border: `2px solid ${chef.color}`,
+                  flexShrink: 0, background: "#0f1923",
+                }}>
+                  <Image
+                    src={`/assets/chefs/${chef.id}-portre.png`}
+                    alt={chef.name}
+                    width={44}
+                    height={44}
+                    style={{ objectFit: "cover", width: "100%", height: "100%" }}
+                  />
+                </div>
                 <input
                   value={player.name}
                   onChange={(e) => updatePlayer(i, "name", e.target.value)}
@@ -153,13 +165,21 @@ export default function MenuScreen({ onStart }: Props) {
                         }
                       }}
                       style={{
-                        padding: "6px 10px", borderRadius: 8, fontSize: 12,
+                        padding: "5px 8px", borderRadius: 8, fontSize: 11,
                         background: player.chefId === c.id ? c.color : "#0f3460",
                         color: "white", border: "none", cursor: taken ? "not-allowed" : "pointer",
-                        opacity: taken ? 0.4 : 1, fontWeight: 600,
+                        opacity: taken ? 0.35 : 1, fontWeight: 600,
+                        display: "flex", alignItems: "center", gap: 5,
                       }}
                     >
-                      {c.emoji} {c.name}
+                      <div style={{
+                        width: 20, height: 20, borderRadius: "50%",
+                        overflow: "hidden", flexShrink: 0, background: "#0f1923",
+                      }}>
+                        <Image src={`/assets/chefs/${c.id}-portre.png`} alt={c.name} width={20} height={20}
+                          style={{ objectFit: "cover", width: "100%", height: "100%" }} />
+                      </div>
+                      {c.name}
                     </button>
                   );
                 })}

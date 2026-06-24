@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { GameState } from "@/lib/types";
 import { BOARD, GROUP_COLORS } from "@/lib/board-data";
 
@@ -125,11 +126,11 @@ export default function Board({ state, animPos, highlightSquare }: Props) {
           <div style={{ position: "absolute", top: 1, right: 1, fontSize: 8 }}>🍂</div>
         )}
 
-        {/* Oyuncu taşları */}
+        {/* Oyuncu taşları — token görseli */}
         {playersHere.length > 0 && (
           <div style={{
             position: "absolute",
-            bottom: 2, left: 0, right: 0,
+            bottom: 1, left: 0, right: 0,
             display: "flex", justifyContent: "center", gap: 1, flexWrap: "wrap",
           }}>
             {playersHere.map((p) => (
@@ -137,14 +138,21 @@ export default function Board({ state, animPos, highlightSquare }: Props) {
                 key={p.id}
                 title={p.name}
                 style={{
-                  width: 11, height: 11, borderRadius: "50%",
-                  background: p.color,
-                  border: "1.5px solid white",
-                  boxShadow: `0 0 4px ${p.color}`,
-                  fontSize: 7,
-                  display: "flex", alignItems: "center", justifyContent: "center",
+                  width: 18, height: 18, borderRadius: "50%",
+                  overflow: "hidden",
+                  border: `1.5px solid ${p.color}`,
+                  boxShadow: `0 0 6px ${p.color}cc`,
+                  background: "#0f1923",
+                  flexShrink: 0,
                 }}
               >
+                <Image
+                  src={`/assets/chefs/${p.chefId}-token.png`}
+                  alt={p.name}
+                  width={18}
+                  height={18}
+                  style={{ objectFit: "cover", width: "100%", height: "100%", display: "block" }}
+                />
               </div>
             ))}
           </div>

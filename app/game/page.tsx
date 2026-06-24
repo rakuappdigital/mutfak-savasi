@@ -181,7 +181,7 @@ export default function GamePage() {
             disabled={false}
             playerName={currentPlayer.name}
             playerColor={currentPlayer.color}
-            playerEmoji={currentPlayer.emoji}
+            chefId={currentPlayer.chefId}
           />
         )}
 

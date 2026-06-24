@@ -1,17 +1,17 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import Image from "next/image";
+import { ChefId } from "@/lib/types";
 
 interface Props {
   onRoll: () => [number, number] | null;
   disabled?: boolean;
   playerName: string;
   playerColor: string;
-  playerEmoji: string;
+  chefId: ChefId;
 }
 
-const FACES = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
-
-export default function DiceRoller({ onRoll, disabled, playerName, playerColor, playerEmoji }: Props) {
+export default function DiceRoller({ onRoll, disabled, playerName, playerColor, chefId }: Props) {
   const [rolling, setRolling] = useState(false);
   const [displayDice, setDisplayDice] = useState<[number, number]>([1, 1]);
   const [result, setResult] = useState<[number, number] | null>(null);
@@ -21,7 +21,6 @@ export default function DiceRoller({ onRoll, disabled, playerName, playerColor, 
     setRolling(true);
     setResult(null);
 
-    // Hızlı rastgele yüzler göster
     let frame = 0;
     const interval = setInterval(() => {
       setDisplayDice([
@@ -29,7 +28,7 @@ export default function DiceRoller({ onRoll, disabled, playerName, playerColor, 
         Math.floor(Math.random() * 6) + 1,
       ]);
       frame++;
-      if (frame >= 10) {
+      if (frame >= 12) {
         clearInterval(interval);
         const dice = onRoll();
         if (dice) {
@@ -38,23 +37,31 @@ export default function DiceRoller({ onRoll, disabled, playerName, playerColor, 
         }
         setRolling(false);
       }
-    }, 60);
+    }, 55);
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-      {/* Zarlar */}
-      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {/* Zar + toplam */}
+      <div style={{ display: "flex", gap: 10, alignItems: "center", justifyContent: "center" }}>
         <Die value={displayDice[0]} rolling={rolling} />
         <Die value={displayDice[1]} rolling={rolling} />
-        {result && (
-          <div style={{
-            background: "#0f3460", borderRadius: 8, padding: "4px 10px",
-            color: "#f5a623", fontWeight: 700, fontSize: 16,
-          }}>
-            = {result[0] + result[1]}
-          </div>
-        )}
+        <div style={{
+          display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+          minWidth: 36,
+        }}>
+          {result && (
+            <>
+              <span style={{ color: "#8892a4", fontSize: 10 }}>toplam</span>
+              <span style={{
+                color: "#f5a623", fontWeight: 800, fontSize: 22,
+                textShadow: "0 0 12px #f5a62388",
+              }}>
+                {result[0] + result[1]}
+              </span>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Buton */}
@@ -63,39 +70,59 @@ export default function DiceRoller({ onRoll, disabled, playerName, playerColor, 
         disabled={disabled || rolling}
         style={{
           width: "100%",
-          padding: "14px 0",
-          borderRadius: 12,
+          padding: "0",
+          height: 56,
+          borderRadius: 14,
           border: "none",
           cursor: (disabled || rolling) ? "not-allowed" : "pointer",
           background: rolling
-            ? "#2a3a5c"
-            : `linear-gradient(135deg, ${playerColor}, ${playerColor}bb)`,
+            ? "#1e2d45"
+            : `linear-gradient(135deg, ${playerColor}dd, ${playerColor}88)`,
           color: "white",
           fontWeight: 700,
-          fontSize: 16,
+          fontSize: 15,
           opacity: disabled ? 0.5 : 1,
           transition: "all 0.2s",
-          boxShadow: rolling ? "none" : `0 4px 20px ${playerColor}55`,
+          boxShadow: rolling ? "none" : `0 4px 24px ${playerColor}44`,
           transform: rolling ? "scale(0.97)" : "scale(1)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          gap: 8,
+          gap: 10,
+          overflow: "hidden",
+          position: "relative",
         }}
       >
-        <span style={{ fontSize: 20 }}>{playerEmoji}</span>
+        {/* Şef portresi — butonda küçük */}
+        <div style={{
+          width: 40, height: 40, borderRadius: "50%",
+          overflow: "hidden", border: `2px solid ${playerColor}`,
+          flexShrink: 0,
+          background: "#0f1923",
+        }}>
+          <Image
+            src={`/assets/chefs/${chefId}-portre.png`}
+            alt={playerName}
+            width={40}
+            height={40}
+            style={{ objectFit: "cover", width: "100%", height: "100%" }}
+          />
+        </div>
         <span>{rolling ? "Atıyor..." : `${playerName} — Zar At`}</span>
-        {!rolling && <span>🎲</span>}
       </button>
 
       <style>{`
         @keyframes diceShake {
           0%   { transform: rotate(0deg) scale(1); }
-          20%  { transform: rotate(-15deg) scale(1.1); }
-          40%  { transform: rotate(15deg) scale(0.95); }
-          60%  { transform: rotate(-10deg) scale(1.05); }
-          80%  { transform: rotate(10deg) scale(0.98); }
+          20%  { transform: rotate(-18deg) scale(1.12); }
+          40%  { transform: rotate(18deg) scale(0.93); }
+          60%  { transform: rotate(-12deg) scale(1.06); }
+          80%  { transform: rotate(12deg) scale(0.97); }
           100% { transform: rotate(0deg) scale(1); }
+        }
+        @keyframes diceBounce {
+          0%, 100% { transform: translateY(0); }
+          50%      { transform: translateY(-4px); }
         }
       `}</style>
     </div>
@@ -105,20 +132,25 @@ export default function DiceRoller({ onRoll, disabled, playerName, playerColor, 
 function Die({ value, rolling }: { value: number; rolling: boolean }) {
   return (
     <div style={{
-      width: 52, height: 52,
-      background: rolling
-        ? "linear-gradient(135deg, #2a3a5c, #16213e)"
-        : "linear-gradient(135deg, #1e3a5f, #0f3460)",
-      borderRadius: 10,
-      display: "flex", alignItems: "center", justifyContent: "center",
-      fontSize: 34,
-      border: rolling ? "2px solid #f5a623" : "2px solid #2a3a5c",
-      boxShadow: rolling ? "0 0 12px #f5a62366" : "0 2px 8px #00000066",
-      animation: rolling ? "diceShake 0.36s infinite" : "none",
-      transition: "border 0.2s, box-shadow 0.2s",
-      userSelect: "none",
+      width: 60, height: 60,
+      borderRadius: 12,
+      overflow: "hidden",
+      border: rolling ? "2px solid #f5a623" : "2px solid #1e3a5f",
+      boxShadow: rolling
+        ? "0 0 16px #f5a62366, 0 4px 12px #00000088"
+        : "0 4px 12px #00000066",
+      animation: rolling ? "diceShake 0.3s infinite" : "diceBounce 2s ease-in-out infinite",
+      background: "#0f1923",
+      flexShrink: 0,
+      transition: "border 0.15s, box-shadow 0.15s",
     }}>
-      {FACES[value - 1]}
+      <Image
+        src={`/assets/dice/zar${value}.png`}
+        alt={`${value}`}
+        width={60}
+        height={60}
+        style={{ objectFit: "cover", width: "100%", height: "100%", display: "block" }}
+      />
     </div>
   );
 }
