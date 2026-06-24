@@ -83,48 +83,44 @@ export default function GamePage() {
   const isMoving = state.phase === "moving";
 
   return (
-    <div style={{
-      display: "flex", flexDirection: "column",
-      height: "100dvh", background: "#0d1520",
-      overflow: "hidden",
-    }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100dvh", background: "var(--bg)", overflow: "hidden", position: "relative" }}>
+
+      {/* Atmosfer katmanı */}
+      <div className="atmo-bg" />
+
       {/* Top bar */}
-      <div style={{
-        background: "#16213e",
-        padding: "8px 14px",
-        borderBottom: "1px solid #1e3a5f",
+      <div className="glass" style={{
+        padding: "7px 14px",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        flexShrink: 0,
+        flexShrink: 0, position: "relative", zIndex: 1,
       }}>
-        <Image src="/assets/ui/logo.png" alt="Mutfak Savaşları" width={90} height={36} style={{ objectFit: "contain" }} />
+        <div className="ui-icon">
+          <Image src="/assets/ui/logo.png" alt="Mutfak Savaşları" width={90} height={36} style={{ objectFit: "contain" }} />
+        </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <Image
-            src={state.mode === "quick" ? "/assets/ui/hizli-mod.png" : "/assets/ui/klasik-mod.png"}
-            alt={state.mode} width={16} height={16} style={{ objectFit: "contain" }}
-          />
-          <span style={{ color: "#8892a4", fontSize: 12 }}>
+          <div className="ui-icon">
+            <Image src={state.mode === "quick" ? "/assets/ui/hizli-mod.png" : "/assets/ui/klasik-mod.png"}
+              alt={state.mode} width={18} height={18} style={{ objectFit: "contain" }} />
+          </div>
+          <span style={{ color: "var(--muted)", fontSize: 12 }}>
             {state.mode === "quick" ? `${state.turn}/${state.maxTurns}` : `Tur ${state.turn}`}
           </span>
-          <button
-            onClick={resetGame}
-            style={{
-              background: "none", border: "1px solid #2a3a5c",
-              color: "#8892a4", cursor: "pointer", fontSize: 11,
-              padding: "3px 8px", borderRadius: 6,
-            }}
-          >
-            ✕
-          </button>
+          <button onClick={resetGame} style={{
+            background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+            color: "var(--muted)", cursor: "pointer", fontSize: 11,
+            padding: "3px 8px", borderRadius: 6,
+          }}>✕</button>
         </div>
       </div>
 
       {/* Oyuncu mini şeridi */}
       <div style={{
-        background: "#111d2e",
+        background: "rgba(0,0,0,0.3)",
         padding: "6px 12px",
         display: "flex", gap: 8, overflowX: "auto",
-        borderBottom: "1px solid #1e3a5f",
-        flexShrink: 0,
+        borderBottom: "1px solid rgba(255,255,255,0.05)",
+        flexShrink: 0, position: "relative", zIndex: 1,
       }}>
         {state.players.map((p, i) => (
           <div key={p.id} style={{
@@ -149,31 +145,30 @@ export default function GamePage() {
       </div>
 
       {/* Tahta */}
+      {/* Tahta alanı */}
       <div style={{
         flex: 1, overflowY: "auto", overflowX: "auto",
         display: "flex", alignItems: "flex-start", justifyContent: "center",
-        padding: 10,
+        padding: 10, position: "relative", zIndex: 1,
       }}>
         <Board state={state} animPos={animPos} highlightSquare={highlightSquare} />
       </div>
 
       {/* Alt panel */}
-      <div style={{
-        background: "#16213e",
-        borderTop: "1px solid #1e3a5f",
+      <div className="glass" style={{
+        borderTop: "1px solid rgba(255,255,255,0.06)",
         padding: "10px 12px",
         flexShrink: 0,
         display: "flex", flexDirection: "column", gap: 8,
+        position: "relative", zIndex: 1,
       }}>
         {/* Son log satırları */}
-        <div style={{ minHeight: 30 }}>
+        <div style={{ minHeight: 28 }}>
           {state.log.slice(-2).map((l, i) => (
             <p key={i} style={{
               margin: "1px 0", fontSize: 11,
-              color: i === state.log.slice(-2).length - 1 ? "#c5d0e0" : "#8892a4",
-            }}>
-              {l}
-            </p>
+              color: i === state.log.slice(-2).length - 1 ? "#c5d0e0" : "var(--muted)",
+            }}>{l}</p>
           ))}
         </div>
 
@@ -188,14 +183,14 @@ export default function GamePage() {
           />
         )}
 
-        {/* Hareket animasyonu sırasında */}
+        {/* Hareket animasyonu */}
         {isMoving && (
           <div style={{
             textAlign: "center", padding: "12px 0",
             color: currentPlayer.color, fontWeight: 600, fontSize: 14,
             animation: "pulse 0.6s ease-in-out infinite alternate",
           }}>
-            {currentPlayer.emoji} {currentPlayer.name} ilerliyor...
+            {currentPlayer.name} ilerliyor...
           </div>
         )}
       </div>
@@ -238,10 +233,10 @@ function WinScreen({ state, onReset }: { state: ReturnType<typeof useGameState>[
     <div style={{
       display: "flex", flexDirection: "column", alignItems: "center",
       justifyContent: "center", height: "100dvh", gap: 20,
-      background: "linear-gradient(135deg, #0d1520 0%, #16213e 60%, #1a2a4a 100%)",
-      padding: 24,
+      background: "var(--bg)", padding: 24, position: "relative", overflow: "hidden",
     }}>
-      <div style={{ animation: "bounce 0.6s ease-in-out infinite alternate" }}>
+      <div className="atmo-bg" />
+      <div className="ui-icon" style={{ animation: "bounce 0.6s ease-in-out infinite alternate" }}>
         <Image src="/assets/ui/kupa.png" alt="Kupa" width={120} height={120} style={{ objectFit: "contain" }} />
       </div>
       <div style={{ textAlign: "center" }}>

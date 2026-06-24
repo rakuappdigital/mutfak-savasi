@@ -41,50 +41,50 @@ export default function MenuScreen({ onStart }: Props) {
       <div style={{
         display: "flex", flexDirection: "column", alignItems: "center",
         justifyContent: "center", height: "100dvh", gap: 32,
-        background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
-        padding: 24,
+        background: "var(--bg)", padding: 24, position: "relative", overflow: "hidden",
       }}>
-        <div style={{ textAlign: "center" }}>
-          <Image src="/assets/ui/logo.png" alt="Mutfak Savaşları" width={280} height={140} style={{ objectFit: "contain" }} />
+        <div className="atmo-bg" />
+        <div style={{ textAlign: "center", position: "relative", zIndex: 1 }}>
+          <div className="ui-icon">
+            <Image src="/assets/ui/logo.png" alt="Mutfak Savaşları" width={280} height={140} style={{ objectFit: "contain" }} />
+          </div>
           <p style={{ color: "#8892a4", marginTop: 4, fontSize: 13 }}>Şeflerin Düellosu</p>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%", maxWidth: 320 }}>
-          <p style={{ color: "#8892a4", fontSize: 13, textAlign: "center", marginBottom: 4 }}>Oyun Modu Seç</p>
+          <p style={{ color: "var(--muted)", fontSize: 13, textAlign: "center", marginBottom: 4 }}>Oyun Modu Seç</p>
 
-          <button
-            className="btn"
-            onClick={() => { setMode("classic"); setStep("players"); }}
-            style={{
-              background: mode === "classic" ? "#1e0a12" : "#16213e",
-              color: "white", padding: "14px 20px", fontSize: 15,
-              border: `2px solid ${mode === "classic" ? "#e94560" : "#2a3a5c"}`, borderRadius: 14,
-              display: "flex", alignItems: "center", gap: 14,
-              boxShadow: mode === "classic" ? "0 0 20px #e9456044" : "none",
-            }}
-          >
-            <Image src="/assets/ui/klasik-mod.png" alt="Klasik" width={44} height={44} style={{ objectFit: "contain", flexShrink: 0 }} />
+          <button className="btn" onClick={() => { setMode("classic"); setStep("players"); }} style={{
+            background: mode === "classic" ? "rgba(233,69,96,0.12)" : "rgba(13,24,40,0.6)",
+            color: "white", padding: "14px 20px", fontSize: 15,
+            border: `2px solid ${mode === "classic" ? "#e94560" : "rgba(255,255,255,0.08)"}`,
+            borderRadius: 14, display: "flex", alignItems: "center", gap: 14,
+            boxShadow: mode === "classic" ? "0 0 24px #e9456033" : "none",
+            backdropFilter: "blur(8px)",
+          }}>
+            <div className="ui-icon" style={{ flexShrink: 0, width: 44, height: 44 }}>
+              <Image src="/assets/ui/klasik-mod.png" alt="Klasik" width={44} height={44} style={{ objectFit: "contain" }} />
+            </div>
             <div style={{ textAlign: "left" }}>
               <div style={{ fontWeight: 700 }}>Klasik Mod</div>
-              <div style={{ fontSize: 11, opacity: 0.7, fontWeight: 400, marginTop: 2 }}>Son ayakta kalan kazanır</div>
+              <div style={{ fontSize: 11, opacity: 0.6, fontWeight: 400, marginTop: 2 }}>Son ayakta kalan kazanır</div>
             </div>
           </button>
 
-          <button
-            className="btn"
-            onClick={() => { setMode("quick"); setStep("players"); }}
-            style={{
-              background: mode === "quick" ? "#1a1200" : "#16213e",
-              color: "white", padding: "14px 20px", fontSize: 15,
-              border: `2px solid ${mode === "quick" ? "#f5a623" : "#2a3a5c"}`, borderRadius: 14,
-              display: "flex", alignItems: "center", gap: 14,
-              boxShadow: mode === "quick" ? "0 0 20px #f5a62344" : "none",
-            }}
-          >
-            <Image src="/assets/ui/hizli-mod.png" alt="Hızlı" width={44} height={44} style={{ objectFit: "contain", flexShrink: 0 }} />
+          <button className="btn" onClick={() => { setMode("quick"); setStep("players"); }} style={{
+            background: mode === "quick" ? "rgba(245,166,35,0.12)" : "rgba(13,24,40,0.6)",
+            color: "white", padding: "14px 20px", fontSize: 15,
+            border: `2px solid ${mode === "quick" ? "#f5a623" : "rgba(255,255,255,0.08)"}`,
+            borderRadius: 14, display: "flex", alignItems: "center", gap: 14,
+            boxShadow: mode === "quick" ? "0 0 24px #f5a62333" : "none",
+            backdropFilter: "blur(8px)",
+          }}>
+            <div className="ui-icon" style={{ flexShrink: 0, width: 44, height: 44 }}>
+              <Image src="/assets/ui/hizli-mod.png" alt="Hızlı" width={44} height={44} style={{ objectFit: "contain" }} />
+            </div>
             <div style={{ textAlign: "left" }}>
               <div style={{ fontWeight: 700 }}>Hızlı Mod</div>
-              <div style={{ fontSize: 11, opacity: 0.7, fontWeight: 400, marginTop: 2 }}>20 tur, en zengin kazanır</div>
+              <div style={{ fontSize: 11, opacity: 0.6, fontWeight: 400, marginTop: 2 }}>20 tur, en zengin kazanır</div>
             </div>
           </button>
         </div>
@@ -96,9 +96,10 @@ export default function MenuScreen({ onStart }: Props) {
     <div style={{
       display: "flex", flexDirection: "column", alignItems: "center",
       height: "100dvh", gap: 20,
-      background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
-      padding: 24, overflowY: "auto",
+      background: "var(--bg)",
+      padding: 24, overflowY: "auto", position: "relative",
     }}>
+      <div className="atmo-bg" />
       <div style={{ textAlign: "center", paddingTop: 16 }}>
         <Image src="/assets/ui/logo.png" alt="Mutfak Savaşları" width={160} height={80} style={{ objectFit: "contain" }} />
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: -4 }}>

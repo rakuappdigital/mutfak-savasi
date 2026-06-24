@@ -79,8 +79,8 @@ export default function GameModals({
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <button className="btn btn-secondary" onClick={onPayRent}>Kira Öde ({rent}₺)</button>
-          <button className="btn" onClick={onStartDuel} style={{ background: "#e94560", color: "white", display: "flex", alignItems: "center", gap: 8 }}>
-            <Image src="/assets/ui/klasik-mod.png" alt="düello" width={20} height={20} style={{ objectFit: "contain" }} />
+          <button className="btn" onClick={onStartDuel} style={{ background: "linear-gradient(135deg,#e94560,#c0392b)", color: "white", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 4px 16px #e9456044" }}>
+            <div className="ui-icon"><Image src="/assets/ui/klasik-mod.png" alt="düello" width={20} height={20} style={{ objectFit: "contain" }} /></div>
             Düello!
           </button>
         </div>
@@ -171,21 +171,21 @@ function Modal({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
       position: "fixed", inset: 0,
-      background: "#000000bb", backdropFilter: "blur(6px)",
+      background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)",
       display: "flex", alignItems: "flex-end", justifyContent: "center",
       zIndex: 50, padding: "0 12px 20px",
       animation: "fadeIn 0.15s ease",
     }}>
       <div style={{
-        background: "linear-gradient(160deg, #1a2d4a, #16213e)",
+        background: "rgba(9,18,32,0.92)",
         borderRadius: 20,
         padding: "24px 20px",
         width: "100%", maxWidth: 420,
-        border: "1px solid #2a3d5c",
-        boxShadow: "0 -4px 40px #00000066",
+        border: "1px solid rgba(255,255,255,0.08)",
+        boxShadow: "0 -8px 48px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.06)",
         display: "flex", flexDirection: "column", alignItems: "center",
         textAlign: "center",
-        animation: "slideUp 0.25s cubic-bezier(0.34,1.56,0.64,1)",
+        animation: "slideUp 0.28s cubic-bezier(0.34,1.56,0.64,1)",
       }}>
         {children}
       </div>

@@ -1,22 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #1a1a2e;
-  --surface: #16213e;
-  --card: #0f3460;
+  --bg:     #060c14;
+  --surface: #0d1828;
+  --card:   #0f2040;
   --accent: #e94560;
-  --gold: #f5a623;
-  --green: #4caf50;
-  --red: #e94560;
-  --text: #eaeaea;
-  --muted: #8892a4;
+  --gold:   #f5a623;
+  --text:   #e8edf5;
+  --muted:  #6a7a94;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
   background: var(--bg);
@@ -27,32 +21,77 @@ body {
   width: 100dvw;
 }
 
+/* UI ikonları — dark arka planı şeffaflaştır, Gemini damgasını gizle */
+.ui-icon {
+  mix-blend-mode: screen;
+  display: inline-flex;
+}
+.ui-icon img { display: block; }
+
+/* Tahta tile ikonları — blend yok, frame korunsun */
+.tile-icon {
+  display: inline-flex;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+/* Animasyonlu atmosfer arka planı */
+.atmo-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.atmo-bg::before {
+  content: '';
+  position: absolute;
+  inset: -40%;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 40%, #e9456012 0%, transparent 70%),
+    radial-gradient(ellipse 50% 60% at 80% 60%, #f5a62309 0%, transparent 70%),
+    radial-gradient(ellipse 80% 40% at 50% 90%, #1a3a6a18 0%, transparent 70%);
+  animation: atmoShift 10s ease-in-out infinite alternate;
+}
+@keyframes atmoShift {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(2%, 3%) scale(1.04); }
+}
+
+/* Frosted glass panel */
+.glass {
+  background: rgba(13, 24, 40, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+/* Butonlar */
 .btn {
   padding: 10px 20px;
-  border-radius: 8px;
+  border-radius: 10px;
   border: none;
   cursor: pointer;
   font-weight: 600;
   font-size: 14px;
   transition: all 0.15s ease;
+  position: relative;
+  z-index: 1;
 }
-
-.btn:active {
-  transform: scale(0.96);
-}
+.btn:active { transform: scale(0.96); }
 
 .btn-primary {
-  background: var(--accent);
+  background: linear-gradient(135deg, #e94560, #c0392b);
   color: white;
+  box-shadow: 0 4px 16px #e9456044;
 }
-
 .btn-secondary {
-  background: var(--card);
+  background: rgba(15,32,64,0.8);
   color: var(--text);
-  border: 1px solid #2a3a5c;
+  border: 1px solid #1e3a5f;
 }
-
 .btn-gold {
-  background: var(--gold);
-  color: #1a1a2e;
+  background: linear-gradient(135deg, #f5a623, #d4891a);
+  color: #060c14;
+  box-shadow: 0 4px 16px #f5a62344;
 }
