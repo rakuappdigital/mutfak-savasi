@@ -1,8 +1,10 @@
 "use client";
 import Image from "next/image";
-import { GameState, Player, Square, GameCard } from "@/lib/types";
+import { GameState, Square, GameCard } from "@/lib/types";
 import { getProperty, calculateRent, ownsFullGroup } from "@/lib/game-engine";
-import { BOARD, STAR_COST } from "@/lib/board-data";
+import { STAR_COST } from "@/lib/board-data";
+import { getSquareImage } from "@/lib/square-image";
+import { GROUP_COLORS } from "@/lib/board-data";
 
 interface Props {
   state: GameState;
@@ -18,241 +20,300 @@ interface Props {
 
 export default function GameModals({
   state, onBuy, onSkipBuy, onPayRent, onStartDuel,
-  onUpgrade, onSkipUpgrade, onCardEffect, onRoll,
+  onUpgrade, onSkipUpgrade, onCardEffect,
 }: Props) {
   const { phase, players, currentPlayerIndex, pendingSquare, duel, drawnCard } = state;
   const player = players[currentPlayerIndex];
 
+  // ── Satın Alma ─────────────────────────────────────────────────────────────
   if (phase === "buy_prompt" && pendingSquare) {
     const sq = pendingSquare;
     const price = sq.price ?? 0;
     const canAfford = player.money >= price;
+    const imgSrc = getSquareImage(sq.type, sq.group);
+    const groupColor = sq.group ? GROUP_COLORS[sq.group] : "#e94560";
+
     return (
-      <Modal>
-        <SquareHeader sq={sq} />
-        <div style={{ background: "#0f3460", borderRadius: 8, padding: "10px 16px", marginBottom: 16, width: "100%" }}>
-          <Row label="Fiyat" value={`${price}₺`} />
-          <Row label="Taban Kira" value={`${sq.baseRent ?? 0}₺`} />
-          {sq.rentByStars && (
-            <>
-              <StarRow stars={1} value={sq.rentByStars[1]} />
-              <StarRow stars={2} value={sq.rentByStars[2]} />
-              <StarRow stars={3} value={sq.rentByStars[3]} />
-            </>
-          )}
+      <HeroModal accentColor={groupColor}>
+        <HeroImage src={imgSrc} alt={sq.name} accentColor={groupColor} />
+        <div style={{ padding: "0 20px 20px", width: "100%" }}>
+          <div style={{ marginBottom: 14 }}>
+            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#fff" }}>{sq.name}</h2>
+            {sq.group && (
+              <span style={{
+                display: "inline-block", marginTop: 4,
+                background: groupColor + "33", color: groupColor,
+                fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 6,
+                border: `1px solid ${groupColor}44`,
+              }}>
+                {sq.group.toUpperCase()} GRUBU
+              </span>
+            )}
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 14 }}>
+            <StatBox label="Fiyat" value={`${price}₺`} accent={groupColor} large />
+            <StatBox label="Taban Kira" value={`${sq.baseRent ?? 0}₺`} />
+            {sq.rentByStars && (<>
+              <StatBox label="⭐ Kira" value={`${sq.rentByStars[1]}₺`} icon="/assets/ui/yildiz-mini.png" />
+              <StatBox label="⭐⭐ Kira" value={`${sq.rentByStars[2]}₺`} icon="/assets/ui/yildiz-mini.png" />
+              <StatBox label="⭐⭐⭐ Kira" value={`${sq.rentByStars[3]}₺`} icon="/assets/ui/yildiz-mini.png" />
+            </>)}
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 14 }}>
+            <div className="ui-icon"><Image src="/assets/ui/para-ikon.png" alt="₺" width={16} height={16} style={{ objectFit: "contain" }} /></div>
+            <span style={{ color: canAfford ? "#f5a623" : "#e94560", fontSize: 13, fontWeight: 600 }}>
+              Bakiye: {player.money}₺ {!canAfford && "— Yetersiz!"}
+            </span>
+          </div>
+
+          <div style={{ display: "flex", gap: 10 }}>
+            <button className="btn btn-secondary" onClick={onSkipBuy} style={{ flex: 1 }}>Geç</button>
+            <button className="btn btn-primary" onClick={onBuy} disabled={!canAfford}
+              style={{ flex: 2, opacity: canAfford ? 1 : 0.4, fontSize: 15 }}>
+              Satın Al — {price}₺
+            </button>
+          </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
-          <Image src="/assets/ui/para-ikon.png" alt="para" width={18} height={18} style={{ objectFit: "contain" }} />
-          <span style={{ color: "#f5a623", fontSize: 13 }}>Bakiye: {player.money}₺</span>
-        </div>
-        <div style={{ display: "flex", gap: 10 }}>
-          <button className="btn btn-secondary" onClick={onSkipBuy}>Geç</button>
-          <button className="btn btn-primary" onClick={onBuy} disabled={!canAfford}
-            style={{ opacity: canAfford ? 1 : 0.5 }}>
-            Satın Al ({price}₺)
-          </button>
-        </div>
-      </Modal>
+      </HeroModal>
     );
   }
 
+  // ── Düello Prompt ──────────────────────────────────────────────────────────
   if (phase === "duel_prompt" && duel && pendingSquare) {
     const prop = getProperty(state, pendingSquare.id);
     const owner = prop ? players.find((p) => p.id === prop.ownerId) : null;
     const rent = prop ? calculateRent(state, pendingSquare, prop) : 0;
+    const imgSrc = getSquareImage(pendingSquare.type, pendingSquare.group);
+    const groupColor = pendingSquare.group ? GROUP_COLORS[pendingSquare.group] : "#e94560";
+
     return (
-      <Modal>
-        <SquareHeader sq={pendingSquare} />
-        {owner && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <div style={{ width: 28, height: 28, borderRadius: "50%", overflow: "hidden", border: `2px solid ${owner.color}`, background: "#0f1923" }}>
-              <Image src={`/assets/chefs/${owner.chefId}-portre.png`} alt={owner.name} width={28} height={28} style={{ objectFit: "cover", width: "100%", height: "100%" }} />
-            </div>
-            <span style={{ color: owner.color, fontSize: 13, fontWeight: 600 }}>{owner.name}</span>
+      <HeroModal accentColor={owner?.color ?? "#e94560"}>
+        <HeroImage src={imgSrc} alt={pendingSquare.name} accentColor={groupColor} />
+        <div style={{ padding: "0 20px 20px", width: "100%" }}>
+          <div style={{ marginBottom: 12 }}>
+            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#fff" }}>{pendingSquare.name}</h2>
+            {owner && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
+                <div style={{ width: 26, height: 26, borderRadius: "50%", overflow: "hidden", border: `2px solid ${owner.color}`, background: "#0f1923" }}>
+                  <Image src={`/assets/chefs/${owner.chefId}-portre.png`} alt={owner.name} width={26} height={26} style={{ objectFit: "cover", width: "100%", height: "100%" }} />
+                </div>
+                <span style={{ color: owner.color, fontSize: 13, fontWeight: 600 }}>{owner.name}'in mülkü</span>
+              </div>
+            )}
           </div>
-        )}
-        <div style={{ background: "#0f3460", borderRadius: 8, padding: "10px 16px", marginBottom: 16, width: "100%" }}>
-          <Row label="Kira" value={`${rent}₺`} highlight />
-          <Row label="Düello Süresi" value={`${duel.timeLimit}s`} />
-          <Row label="Kazanırsan" value="Mülkü al!" />
-          <Row label="Kaybedersen" value={`${rent * 2}₺ öde`} />
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 14 }}>
+            <StatBox label="Ödenecek Kira" value={`${rent}₺`} accent="#e94560" large />
+            <StatBox label="Düello Süresi" value={`${duel.timeLimit}s`} />
+            <StatBox label="Kazanırsan" value="Mülkü al!" accent="#4caf50" />
+            <StatBox label="Kaybedersen" value={`${rent * 2}₺`} accent="#e94560" />
+          </div>
+
+          <div style={{ display: "flex", gap: 10 }}>
+            <button className="btn btn-secondary" onClick={onPayRent} style={{ flex: 1 }}>
+              Kira Öde
+            </button>
+            <button className="btn btn-primary" onClick={onStartDuel}
+              style={{ flex: 2, fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              <div className="ui-icon"><Image src="/assets/ui/klasik-mod.png" alt="" width={20} height={20} style={{ objectFit: "contain" }} /></div>
+              Düello!
+            </button>
+          </div>
         </div>
-        <div style={{ display: "flex", gap: 10 }}>
-          <button className="btn btn-secondary" onClick={onPayRent}>Kira Öde ({rent}₺)</button>
-          <button className="btn" onClick={onStartDuel} style={{ background: "linear-gradient(135deg,#e94560,#c0392b)", color: "white", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 4px 16px #e9456044" }}>
-            <div className="ui-icon"><Image src="/assets/ui/klasik-mod.png" alt="düello" width={20} height={20} style={{ objectFit: "contain" }} /></div>
-            Düello!
-          </button>
-        </div>
-      </Modal>
+      </HeroModal>
     );
   }
 
+  // ── Yükseltme ──────────────────────────────────────────────────────────────
   if (phase === "upgrade_prompt" && pendingSquare) {
     const sq = pendingSquare;
     const prop = getProperty(state, sq.id);
     const currentStars = prop?.stars ?? 0;
     const canUpgrade = currentStars < 3 && sq.group ? ownsFullGroup(state, player.id, sq.group) : false;
     const canAfford = player.money >= STAR_COST;
+    const imgSrc = getSquareImage(sq.type, sq.group);
+    const groupColor = sq.group ? GROUP_COLORS[sq.group] : "#f5a623";
+
     return (
-      <Modal>
-        <SquareHeader sq={sq} />
-        <div style={{ display: "flex", gap: 4, margin: "8px 0", justifyContent: "center" }}>
-          {currentStars === 0
-            ? <span style={{ color: "#8892a4", fontSize: 12 }}>Yıldızsız</span>
-            : <Image src={`/assets/squares/yildiz${currentStars}.png`} alt={`${currentStars} yıldız`} width={52} height={52} style={{ objectFit: "contain" }} />
-          }
-        </div>
-        {currentStars < 3 && (
-          <div style={{ background: "#0f3460", borderRadius: 8, padding: "10px 16px", marginBottom: 14, width: "100%" }}>
-            {sq.rentByStars && <StarRow stars={currentStars + 1 as 1|2|3} value={sq.rentByStars[currentStars + 1]} highlight />}
-            <Row label="Maliyet" value={`${STAR_COST}₺`} />
-            {!canUpgrade && (
-              <p style={{ color: "#e94560", fontSize: 11, marginTop: 6, marginBottom: 0 }}>
-                Tüm grubu sahip olmalısın!
-              </p>
+      <HeroModal accentColor="#f5a623">
+        <HeroImage src={imgSrc} alt={sq.name} accentColor={groupColor} />
+        <div style={{ padding: "0 20px 20px", width: "100%" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#fff" }}>{sq.name}</h2>
+            {currentStars > 0 && (
+              <div className="ui-icon">
+                <Image src={`/assets/squares/yildiz${currentStars}.png`} alt={`${currentStars} yıldız`} width={44} height={44} style={{ objectFit: "contain" }} />
+              </div>
             )}
           </div>
-        )}
-        <div style={{ display: "flex", gap: 10 }}>
-          <button className="btn btn-secondary" onClick={onSkipUpgrade}>Geç</button>
-          {currentStars < 3 && (
-            <button className="btn btn-gold" onClick={onUpgrade}
-              disabled={!canUpgrade || !canAfford}
-              style={{ opacity: (canUpgrade && canAfford) ? 1 : 0.4 }}>
-              Yıldız Ekle ({STAR_COST}₺)
-            </button>
-          )}
-        </div>
-      </Modal>
-    );
-  }
 
-  if (phase === "card_draw" && drawnCard) {
-    return (
-      <Modal>
-        {/* Şans kartı görseli — metin üzerine overlay */}
-        <div style={{ position: "relative", width: 180, height: 252, marginBottom: 16 }}>
-          <Image
-            src="/assets/ui/sans-karti.png"
-            alt="Şans Kartı"
-            fill
-            style={{ objectFit: "cover", borderRadius: 10 }}
-          />
-          {/* Kartın beyaz metin alanına başlık + açıklama yaz */}
-          <div style={{
-            position: "absolute",
-            top: "54%", left: "8%", right: "8%",
-            textAlign: "center",
-          }}>
-            <p style={{ fontWeight: 700, fontSize: 12, color: "#1a1a2e", margin: "0 0 4px", lineHeight: 1.2 }}>
-              {drawnCard.title}
+          {currentStars < 3 ? (
+            <>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 14 }}>
+                <StatBox label="Mevcut Kira" value={`${sq.rentByStars?.[currentStars] ?? 0}₺`} />
+                <StatBox label="Yeni Kira" value={`${sq.rentByStars?.[currentStars + 1] ?? 0}₺`} accent="#4caf50" large />
+                <StatBox label="Yıldız Maliyeti" value={`${STAR_COST}₺`} accent="#f5a623" />
+                <StatBox label="Bakiye" value={`${player.money}₺`} />
+              </div>
+              {!canUpgrade && (
+                <p style={{ color: "#e94560", fontSize: 12, marginBottom: 12, textAlign: "center" }}>
+                  Yıldız eklemek için tüm grubu sahip olmalısın!
+                </p>
+              )}
+            </>
+          ) : (
+            <p style={{ color: "#f5a623", fontSize: 14, textAlign: "center", marginBottom: 14, fontWeight: 700 }}>
+              Maksimum yıldıza ulaşıldı! ⭐⭐⭐
             </p>
-            <p style={{ fontSize: 10, color: "#333", margin: 0, lineHeight: 1.3 }}>
-              {drawnCard.description}
-            </p>
+          )}
+
+          <div style={{ display: "flex", gap: 10 }}>
+            <button className="btn btn-secondary" onClick={onSkipUpgrade} style={{ flex: 1 }}>Geç</button>
+            {currentStars < 3 && (
+              <button className="btn btn-gold" onClick={onUpgrade}
+                disabled={!canUpgrade || !canAfford}
+                style={{ flex: 2, opacity: (canUpgrade && canAfford) ? 1 : 0.4, fontSize: 15 }}>
+                Yıldız Ekle — {STAR_COST}₺
+              </button>
+            )}
           </div>
         </div>
-        <button className="btn btn-primary" onClick={() => onCardEffect(drawnCard)} style={{ width: "100%" }}>
-          Tamam
-        </button>
-      </Modal>
+      </HeroModal>
     );
   }
 
-  if (phase === "rolling") {
-    return null; // Rol butonu ana sayfada
+  // ── Şans Kartı ─────────────────────────────────────────────────────────────
+  if (phase === "card_draw" && drawnCard) {
+    return (
+      <HeroModal accentColor="#f5a623">
+        <div style={{
+          position: "relative", width: "100%",
+          display: "flex", justifyContent: "center",
+          padding: "20px 20px 0",
+        }}>
+          {/* Kart görseli */}
+          <div style={{
+            position: "relative", width: 200, height: 280,
+            animation: "cardFlip 0.5s cubic-bezier(0.34,1.56,0.64,1)",
+            filter: "drop-shadow(0 8px 32px #f5a62344)",
+          }}>
+            <Image src="/assets/ui/sans-karti.png" alt="Şans Kartı" fill style={{ objectFit: "cover", borderRadius: 12 }} />
+            {/* Metin overlay */}
+            <div style={{
+              position: "absolute",
+              top: "55%", left: "8%", right: "8%",
+              textAlign: "center",
+            }}>
+              <p style={{ fontWeight: 800, fontSize: 13, color: "#1a1a2e", margin: "0 0 4px", lineHeight: 1.2 }}>
+                {drawnCard.title}
+              </p>
+              <p style={{ fontSize: 10, color: "#2a2a3e", margin: 0, lineHeight: 1.4 }}>
+                {drawnCard.description}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div style={{ padding: "16px 20px 20px", width: "100%" }}>
+          <button className="btn btn-gold" onClick={() => onCardEffect(drawnCard)} style={{ width: "100%", fontSize: 15 }}>
+            Tamam
+          </button>
+        </div>
+      </HeroModal>
+    );
   }
 
   return null;
 }
 
-function Modal({ children }: { children: React.ReactNode }) {
+// ── Alt Bileşenler ───────────────────────────────────────────────────────────
+
+function HeroModal({ children, accentColor }: { children: React.ReactNode; accentColor: string }) {
   return (
     <div style={{
       position: "fixed", inset: 0,
-      background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)",
+      background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)",
       display: "flex", alignItems: "flex-end", justifyContent: "center",
-      zIndex: 50, padding: "0 12px 20px",
+      zIndex: 50,
       animation: "fadeIn 0.15s ease",
     }}>
       <div style={{
-        background: "rgba(9,18,32,0.92)",
-        borderRadius: 20,
-        padding: "24px 20px",
-        width: "100%", maxWidth: 420,
-        border: "1px solid rgba(255,255,255,0.08)",
-        boxShadow: "0 -8px 48px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.06)",
+        background: "rgba(8,15,26,0.96)",
+        borderRadius: "24px 24px 0 0",
+        width: "100%", maxWidth: 460,
+        border: `1px solid ${accentColor}33`,
+        borderBottom: "none",
+        boxShadow: `0 -8px 60px rgba(0,0,0,0.9), 0 0 80px ${accentColor}11`,
         display: "flex", flexDirection: "column", alignItems: "center",
-        textAlign: "center",
-        animation: "slideUp 0.28s cubic-bezier(0.34,1.56,0.64,1)",
+        overflow: "hidden",
+        animation: "slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1)",
+        maxHeight: "90dvh",
+        overflowY: "auto",
       }}>
         {children}
       </div>
       <style>{`
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn  { from { opacity:0 } to { opacity:1 } }
         @keyframes slideUp {
-          from { transform: translateY(60px); opacity: 0; }
-          to   { transform: translateY(0);   opacity: 1; }
+          from { transform: translateY(80px); opacity: 0; }
+          to   { transform: translateY(0);    opacity: 1; }
+        }
+        @keyframes cardFlip {
+          from { transform: rotateY(90deg) scale(0.8); opacity: 0; }
+          to   { transform: rotateY(0deg)  scale(1);   opacity: 1; }
+        }
+        @keyframes heroGlow {
+          0%, 100% { opacity: 0.6; }
+          50%       { opacity: 1; }
         }
       `}</style>
     </div>
   );
 }
 
-function Row({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+function HeroImage({ src, alt, accentColor }: { src: string | null; alt: string; accentColor: string }) {
+  if (!src) return null;
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-      <span style={{ color: "#8892a4", fontSize: 12 }}>{label}</span>
-      <span style={{ color: highlight ? "#f5a623" : "#eaeaea", fontSize: 12, fontWeight: highlight ? 700 : 400 }}>
-        {value}
-      </span>
+    <div style={{
+      width: "100%", position: "relative",
+      aspectRatio: "16/9",
+      overflow: "hidden",
+    }}>
+      {/* Gradient alt kararma */}
+      <div style={{
+        position: "absolute", inset: 0, zIndex: 1,
+        background: `linear-gradient(to bottom, transparent 40%, rgba(8,15,26,0.95) 100%)`,
+      }} />
+      {/* Renk glow */}
+      <div style={{
+        position: "absolute", inset: 0, zIndex: 1,
+        background: `radial-gradient(ellipse at 50% 30%, ${accentColor}18 0%, transparent 70%)`,
+        animation: "heroGlow 3s ease-in-out infinite",
+      }} />
+      <Image src={src} alt={alt} fill style={{ objectFit: "cover" }} sizes="460px" />
     </div>
   );
 }
 
-function StarRow({ stars, value, highlight }: { stars: 1|2|3; value: number; highlight?: boolean }) {
+function StatBox({ label, value, accent, large, icon }: {
+  label: string; value: string; accent?: string; large?: boolean; icon?: string;
+}) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-        <Image src="/assets/ui/yildiz-mini.png" alt="yıldız" width={14} height={14} style={{ objectFit: "contain" }} />
-        <span style={{ color: "#8892a4", fontSize: 12 }}>{stars} Yıldız Kira</span>
+    <div style={{
+      background: "rgba(255,255,255,0.04)",
+      border: `1px solid ${accent ? accent + "33" : "rgba(255,255,255,0.06)"}`,
+      borderRadius: 10, padding: "8px 10px",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 2 }}>
+        {icon && <div className="ui-icon"><Image src={icon} alt="" width={11} height={11} style={{ objectFit: "contain" }} /></div>}
+        <span style={{ color: "var(--muted)", fontSize: 10, fontWeight: 500 }}>{label}</span>
       </div>
-      <span style={{ color: highlight ? "#f5a623" : "#eaeaea", fontSize: 12, fontWeight: highlight ? 700 : 400 }}>
-        {value}₺
-      </span>
-    </div>
-  );
-}
-
-function SquareHeader({ sq }: { sq: Square }) {
-  const imgMap: Record<string, string> = {
-    italyan: "/assets/squares/italyan.png", japon: "/assets/squares/japon.png",
-    turk:    "/assets/squares/turk.png",    meksika: "/assets/squares/meksika.png",
-    domates: "/assets/squares/domates.png", un:      "/assets/squares/un.png",
-    peynir:  "/assets/squares/peynir.png",  et:      "/assets/squares/et.png",
-    sebze:   "/assets/squares/sebze.png",
-  };
-  const typeMap: Record<string, string> = {
-    start: "/assets/squares/baslangic.png", rest:              "/assets/squares/dinlenme.png",
-    tax:   "/assets/squares/vergi.png",     jail:              "/assets/squares/depo.png",
-    chance:"/assets/squares/sans.png",      fire:              "/assets/squares/yangin.png",
-    health_inspection: "/assets/squares/denetim.png",
-    season_menu: "/assets/squares/mevsim.png",
-    duel_square: "/assets/squares/duello.png",
-  };
-  const src = sq.group ? imgMap[sq.group] : typeMap[sq.type];
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14, width: "100%" }}>
-      {src && (
-        <div style={{ width: 56, height: 56, borderRadius: 10, overflow: "hidden", flexShrink: 0 }}>
-          <Image src={src} alt={sq.name} width={56} height={56} style={{ objectFit: "cover", width: "100%", height: "100%" }} />
-        </div>
-      )}
-      <div style={{ textAlign: "left" }}>
-        <h3 style={{ margin: 0, color: "#eaeaea", fontSize: 16, fontWeight: 700 }}>{sq.name}</h3>
-        {sq.group && <p style={{ color: "#8892a4", fontSize: 11, margin: "3px 0 0" }}>{sq.group} grubu</p>}
-      </div>
+      <span style={{
+        color: accent ?? "#e8edf5",
+        fontSize: large ? 17 : 14,
+        fontWeight: large ? 800 : 600,
+      }}>{value}</span>
     </div>
   );
 }

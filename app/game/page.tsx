@@ -9,6 +9,7 @@ import PlayerPanel from "@/components/PlayerPanel";
 import GameModals from "@/components/GameModals";
 import DuelMinigame from "@/components/DuelMinigame";
 import DiceRoller from "@/components/DiceRoller";
+import PlayerInventory from "@/components/PlayerInventory";
 
 export default function GamePage() {
   const {
@@ -22,6 +23,7 @@ export default function GamePage() {
   const [animPos, setAnimPos] = useState<number[]>([0, 0, 0, 0]);
   const [highlightSquare, setHighlightSquare] = useState<number | null>(null);
   const animatingRef = useRef(false);
+  const [inventoryPlayerId, setInventoryPlayerId] = useState<string | null>(null);
 
   // Oyun başladığında animPos'u sıfırla
   useEffect(() => {
@@ -123,24 +125,23 @@ export default function GamePage() {
         flexShrink: 0, position: "relative", zIndex: 1,
       }}>
         {state.players.map((p, i) => (
-          <div key={p.id} style={{
+          <button key={p.id} onClick={() => setInventoryPlayerId(p.id)} style={{
             display: "flex", alignItems: "center", gap: 5,
-            background: i === state.currentPlayerIndex ? "#16213e" : "transparent",
+            background: i === state.currentPlayerIndex ? `${p.color}18` : "rgba(255,255,255,0.03)",
             borderRadius: 8, padding: "4px 8px",
-            border: i === state.currentPlayerIndex ? `1px solid ${p.color}` : "1px solid transparent",
+            border: i === state.currentPlayerIndex ? `1px solid ${p.color}66` : "1px solid rgba(255,255,255,0.06)",
             opacity: p.isBankrupt ? 0.4 : 1,
-            flexShrink: 0,
+            flexShrink: 0, cursor: "pointer",
+            boxShadow: i === state.currentPlayerIndex ? `0 0 10px ${p.color}22` : "none",
           }}>
-            <div style={{
-              width: 10, height: 10, borderRadius: "50%",
-              background: p.color, flexShrink: 0,
-              boxShadow: i === state.currentPlayerIndex ? `0 0 6px ${p.color}` : "none",
-            }} />
+            <div style={{ width: 22, height: 22, borderRadius: "50%", overflow: "hidden", border: `1.5px solid ${p.color}`, flexShrink: 0, background: "#0f1923" }}>
+              <Image src={`/assets/chefs/${p.chefId}-portre.png`} alt={p.name} width={22} height={22} style={{ objectFit: "cover", width: "100%", height: "100%" }} />
+            </div>
             <span style={{ fontSize: 11, color: p.color, fontWeight: 600 }}>{p.name}</span>
-            <Image src="/assets/ui/para-ikon.png" alt="₺" width={11} height={11} style={{ objectFit: "contain" }} />
-            <span style={{ fontSize: 11, color: "#8892a4" }}>{p.money}</span>
-            {p.isBankrupt && <Image src="/assets/ui/iflas.png" alt="iflas" width={14} height={14} style={{ objectFit: "contain" }} />}
-          </div>
+            <div className="ui-icon"><Image src="/assets/ui/para-ikon.png" alt="₺" width={11} height={11} style={{ objectFit: "contain" }} /></div>
+            <span style={{ fontSize: 11, color: "var(--muted)" }}>{p.money}</span>
+            {p.isBankrupt && <div className="ui-icon"><Image src="/assets/ui/iflas.png" alt="iflas" width={14} height={14} style={{ objectFit: "contain" }} /></div>}
+          </button>
         ))}
       </div>
 
@@ -171,6 +172,27 @@ export default function GamePage() {
             }}>{l}</p>
           ))}
         </div>
+
+        {/* Kartlarım butonu */}
+        {state.phase === "rolling" && (
+          <button
+            onClick={() => setInventoryPlayerId(currentPlayer.id)}
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              border: `1px solid ${currentPlayer.color}33`,
+              borderRadius: 8, padding: "6px 14px",
+              color: currentPlayer.color, fontSize: 12, fontWeight: 600,
+              cursor: "pointer", alignSelf: "flex-start",
+              display: "flex", alignItems: "center", gap: 6,
+            }}
+          >
+            <div style={{ width: 18, height: 18, borderRadius: "50%", overflow: "hidden", background: "#0f1923" }}>
+              <Image src={`/assets/chefs/${currentPlayer.chefId}-portre.png`} alt="" width={18} height={18}
+                style={{ objectFit: "cover", width: "100%", height: "100%" }} />
+            </div>
+            Kartlarım
+          </button>
+        )}
 
         {/* Zar at butonu */}
         {state.phase === "rolling" && !currentPlayer.isBankrupt && (
@@ -210,18 +232,20 @@ export default function GamePage() {
 
       {/* Düello */}
       {state.phase === "duel_active" && state.duel && (
-        <DuelMinigame
-          duel={state.duel}
-          players={state.players}
-          onResult={handleDuelResult}
+        <DuelMinigame duel={state.duel} players={state.players} onResult={handleDuelResult} />
+      )}
+
+      {/* Oyuncu envanteri */}
+      {inventoryPlayerId && (
+        <PlayerInventory
+          state={state}
+          playerId={inventoryPlayerId}
+          onClose={() => setInventoryPlayerId(null)}
         />
       )}
 
       <style>{`
-        @keyframes pulse {
-          from { opacity: 0.7; }
-          to { opacity: 1; }
-        }
+        @keyframes pulse { from { opacity:0.7 } to { opacity:1 } }
       `}</style>
     </div>
   );
